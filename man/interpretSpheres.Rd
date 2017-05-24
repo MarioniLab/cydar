@@ -60,7 +60,7 @@ This moves across hyperspheres specified by \code{select}, i.e., pressing \dQuot
 By default, \code{select=NULL} which means that the app will progress through all hyperspheres in \code{x}.
 It is often worth setting \code{select}, e.g., to non-redundant significant hyperspheres in order to reduce the number of elements that need to be inspected.
 
-Users can also jump to a particular row/hypersphere by providing an integer scalar in the \dQuote{Go to} field.
+Users can also jump to a particular row/hypersphere by providing an integer scalar in the \dQuote{Go to sphere} field.
 This specifies the row index for the hypersphere of interest, and works for either selected or unselected hyperspheres.
 However, pressing \dQuote{Previous} or \dQuote{Next} will jump to the nearest index of the selected hyperspheres. 
 The navigation history at any given time is shown in the side bar.
@@ -82,6 +82,16 @@ This should contain information about all hyperspheres.
 \code{add.plot} should generate a plot on the current graphics device.
 This is usually done in a hypersphere-specific manner, where the first argument is used to extract the relevant information from the second argument.
 For example, the abundances of all samples can be visualized directly for each hypersphere in the app.
+}
+
+\section{Inspecting label propagation}{
+If \code{red.dim} is supplied and at least one cell is labelled, the \dQuote{Update labels} button can be used to propagate the labels to surrounding cells.
+Specifically, for each unlabelled cell, the closest labelled cell is identified and its label is assigned to the unlabelled cell.
+A plot is then created showing the distribution of cells for each label in the low-dimensional space.
+
+This functionality is useful for determining how the labels would be automatically assigned by \code{\link{labelSpheres}}.
+If many distinct clusters have the same label, it suggests that more manual labelling is required to distinguish clusters.
+Note that the automatically assigned labels are \emph{not} recorded, they are only used here for visualization purposes.
 }
 
 \value{
@@ -118,10 +128,11 @@ labels <- shiny::runApp(app)
 labels <- interpretSpheres(cnt)
 }
 
-# Doing it with metrics.
+# Doing it with metrics and coordinates.
 N <- nrow(cnt)
 metrics <- data.frame(logFC=rnorm(N), PValue=runif(N))
-app <- interpretSpheres(cnt, metrics=metrics, run=FALSE)
+coords <- matrix(rnorm(N*2), ncol=2)
+app <- interpretSpheres(cnt, red.coord=coords, metrics=metrics, run=FALSE)
 
 # Doing it with an extra plot.
 app <- interpretSpheres(cnt, run=FALSE, add.plot=function(i, x) {

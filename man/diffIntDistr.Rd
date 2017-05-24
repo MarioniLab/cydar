@@ -25,7 +25,7 @@ All markers that are present in all objects will be used by default.
 The difference between two intensity distributions is defined as half of the area between their probability density functions.
 For each intensity distribution, the density function is approximated by binning events into a grid of length \code{npts}.
 The absolute difference in the proportion of events is computed for each bin; summed across all bins; multiplied by the width of each bin; and halved.
-The final value ranges from 0 to 1 and represents the proportion of probability that differs between the distributions.
+The final value ranges from 0 to 1 and represents the proportion of probability mass that differs between the distributions.
 
 The differences for each marker are returned in the form of a symmetric matrix.
 Each row/column is a sample, named as a combination of the batch and sample names.

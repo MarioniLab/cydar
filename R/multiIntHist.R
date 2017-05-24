@@ -1,6 +1,4 @@
-multiIntHist <- function(collected, cols=NULL,
-                         xlab="Intensity", ylab="Density", ..., 
-                         lwd=2, lty=1, pch=16, cex=2) 
+multiIntHist <- function(collected, cols=NULL, xlab="Intensity", ylab="Density", lwd=2, lty=1, pch=16, cex=2, ...) 
 # This plots multiple intensity distributions as histogram outlines on a single plot.
 # The density at zero is also shown in points at zero.
 #
@@ -9,7 +7,7 @@ multiIntHist <- function(collected, cols=NULL,
 # last modified 21 March 2017 
 {   
     if (is.null(cols)) { 
-        cols <- grDevices::rainbow(length(collected))
+        cols <- rainbow(length(collected))
     } else {
         cols <- rep(cols, length.out=length(collected))
     }
@@ -21,7 +19,7 @@ multiIntHist <- function(collected, cols=NULL,
         cur.vals <- collected[[batch]] 
         is.zero <- cur.vals < 1e-6 
         cur.vals <- cur.vals[!is.zero]
-        hout <- graphics::hist(cur.vals, breaks=breaks, plot=FALSE)
+        hout <- hist(cur.vals, breaks=breaks, plot=FALSE)
         hout$density <- hout$density * length(is.zero)/length(cur.vals)
         h.all[[batch]] <- hout 
         h.zero[[batch]] <- sum(is.zero)/length(is.zero)
