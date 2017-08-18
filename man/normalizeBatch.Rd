@@ -6,7 +6,7 @@
 
 \usage{
 normalizeBatch(batch.x, batch.comp, mode="range", p=0.01, 
-    markers=NULL, target=NULL, ...)
+    target=NULL, markers=NULL, ...)
 }
 
 \arguments{
@@ -20,8 +20,8 @@ A string or character vector of length equal to the number of markers, specifyin
 This can take values of \code{"range"}, \code{"warp"} or \code{"none"} (in which case no normalization is performed).
 }
 \item{p}{A numeric scalar between 0 and 0.5, specifying the percentile used to define the range of the distribution for range-based normalization.}
-\item{markers}{A character vector specifying the markers to be normalized and returned.}
 \item{target}{An integer scalar indicating the reference batch.}
+\item{markers}{A character vector specifying the markers to be normalized and returned.}
 \item{...}{Additional arguments to be passed to \code{\link[flowStats]{warpSet}} for \code{mode="warp"}.}
 }
 
