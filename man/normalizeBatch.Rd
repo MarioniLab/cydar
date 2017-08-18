@@ -5,7 +5,8 @@
 \description{Perform normalization to correct intensities across batches with at least one common level.}
 
 \usage{
-normalizeBatch(batch.x, batch.comp, mode="range", p=0.01, target=NULL, ...)
+normalizeBatch(batch.x, batch.comp, mode="range", p=0.01, 
+    markers=NULL, target=NULL, ...)
 }
 
 \arguments{
@@ -19,6 +20,7 @@ A string or character vector of length equal to the number of markers, specifyin
 This can take values of \code{"range"}, \code{"warp"} or \code{"none"} (in which case no normalization is performed).
 }
 \item{p}{A numeric scalar between 0 and 0.5, specifying the percentile used to define the range of the distribution for range-based normalization.}
+\item{markers}{A character vector specifying the markers to be normalized and returned.}
 \item{target}{An integer scalar indicating the reference batch.}
 \item{...}{Additional arguments to be passed to \code{\link[flowStats]{warpSet}} for \code{mode="warp"}.}
 }
@@ -51,10 +53,14 @@ Ideally, all batches would contain samples from all groups, with similar total n
 The adjustment function will still be applied to intensities for samples from non-shared groups that do not contribute to the reference distribution.
 However, note that the adjustment may not be accurate if the to-be-corrected intensities lie outside the range of values used to construct the function.
 
-By default, the reference distribution is defined as an average of the relevant statistic across batches.
+By default, the reference distribution for each marker is defined as an average of the relevant statistic across batches.
 If \code{target} is not \code{NULL}, the specified batch will be used as the reference distribution.
 This means that if \code{mode="range"}, the reference quantile function will be defined as the quantile function of the chosen batch.
 Similarly, if \code{mode="warp"}, \code{\link[flowStats]{warpSet}} will align all other batches to the locations of the peaks in \code{target}.
+
+All markers are used by default when \code{markers=NULL}.
+If \code{markers} is specified, only the specified markers will be normalized and returned in the output expression matrices.
+This is usually more convenient than subsetting the inputs or outputs manually.
 
 To convert the output into a format appropriate for \code{\link{prepareCellData}}, apply \code{\link{unlist}} with \code{recursive=FALSE}.
 This will generate a list of intensity matrices for all samples in all batches, rather than a list of list of matrices.

@@ -1,4 +1,4 @@
-normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NULL, ...)
+normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NULL, markers=NULL, ...)
 # Performs warp- or range-based adjustment of different batches, given a 
 # list of 'x' objects like that used for 'prepareCellData'
 # and another list specifying the composition of samples per batch.
@@ -32,6 +32,14 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     for (b in seq_len(nbatches)) { 
         out <- .pull_out_data(batch.x[[b]])
         batch.out[[b]] <- out
+
+        if (!is.null(markers)) {
+            mm <- match(markers, out$markers)
+            if (any(is.na(mm))) { stop("some 'markers' not present in batch") }
+            out$markers <- out$markers[mm]
+            out$exprs <- lapply(out$exprs, function(x) { x[,mm,drop=FALSE] })
+        }
+
         if (b==1L) {
             ref.markers <- out$markers
         } else if (!identical(ref.markers, out$markers)) { 
