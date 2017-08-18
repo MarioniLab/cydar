@@ -1,4 +1,4 @@
-normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01)
+normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NULL, ...)
 # Performs warp- or range-based adjustment of different batches, given a 
 # list of 'x' objects like that used for 'prepareCellData'
 # and another list specifying the composition of samples per batch.
@@ -46,6 +46,14 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01)
     mode <- rep(mode, length.out=length(ref.markers))
     if (is.null(names(mode))) {
         names(mode) <- ref.markers
+    }
+
+    # Checking 'target' specification.
+    if (!is.null(target)) { 
+        target <- as.integer(target)
+        if (target < 1L || target > nbatches) {
+            stop("'target' must be a positive integer no greater than the number of batches")
+        }
     }
 
     # Computes sample- and batch-specific case weights to be used for all markers.
@@ -102,7 +110,7 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01)
             ;
         } else if (curmode=="warp") { 
             # Performing warp-based normalization to a reference.
-            converters <- .transformDistr(all.obs, batch.weights, m)
+            converters <- .transformDistr(all.obs, batch.weights, m, target=target, ...)
             for (b in seq_len(nbatches)) { 
                 converter <- converters[[b]]
                 cur.out <- batch.out[[b]]
@@ -128,7 +136,13 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01)
                 batch.min[b] <- out[1]
                 batch.max[b] <- out[2]
             }
-            targets <- c(mean(batch.min), mean(batch.max))
+
+            # Selecting the target batch to perform the normalization.
+            if (is.null(target)) { 
+                targets <- c(mean(batch.min), mean(batch.max))
+            } else {
+                targets <- c(batch.min[target], batch.max[target])
+            }
 
             # Scaling intensities per batch so that the observed range equals the average range.
             for (b in seq_len(nbatches)) {
@@ -145,7 +159,7 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01)
     return(output)
 }
 
-.transformDistr <- function(all.obs, all.wts, name) {
+.transformDistr <- function(all.obs, all.wts, name, target, ...) {
     # Subsample intensities proportional to weights.
     nbatch <- length(all.obs)
     cur.ffs <- vector("list", nbatch)
@@ -160,10 +174,13 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01)
     names(cur.ffs) <- names(all.obs)
     fs <- as(cur.ffs, "flowSet")
     colnames(fs) <- name
+    if (!is.null(target)) { 
+        target <- names(cur.ffs)[target]
+    }
 
     # Applying warping normalization, as described in the flowStats vignette.
     norm <- normalization(normFunction=function(x, parameters, ...) { flowStats::warpSet(x, parameters, ...) },
-                          parameters=name, arguments=list(monwrd=TRUE))
+                          parameters=name, arguments=list(monwrd=TRUE, ...))
     new.fs <- normalize(fs, norm)
 
     # Defining warp functions (setting warpFuns doesn't really work, for some reason).
