@@ -5,7 +5,7 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
 #
 # written by Aaron Lun
 # created 27 October 2016
-# last modified 21 March 2017
+# last modified 18 August 2017
 {
     if (is.null(batch.comp)) {
         batch.comp <- lapply(batch.x, function(i) rep(1, length(i)))
@@ -17,21 +17,10 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
         stop("length of 'batch.x' and 'batch.comp' must be identical")
     }
 
-    # Computing the average number of samples from each batch to use in correction.
-    comp.batches <- do.call(rbind, lapply(batch.comp, table))
-    ref.comp <- colMeans(comp.batches)
-    batch.weight <- ref.comp/comp.batches
-    empty.factors <- colSums(!is.finite(batch.weight)) > 0
-    if (all(empty.factors)) {
-        stop("no level of 'batch.comp' is common to all batches")
-    }
-    use.batches <- colnames(batch.weight)[!empty.factors]
-
     # Checking the number of markers we're dealing with.
     batch.out <- vector("list", nbatches)
     for (b in seq_len(nbatches)) { 
         out <- .pull_out_data(batch.x[[b]])
-        batch.out[[b]] <- out
 
         if (!is.null(markers)) {
             mm <- match(markers, out$markers)
@@ -39,6 +28,7 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
             out$markers <- out$markers[mm]
             out$exprs <- lapply(out$exprs, function(x) { x[,mm,drop=FALSE] })
         }
+        batch.out[[b]] <- out
 
         if (b==1L) {
             ref.markers <- out$markers
@@ -64,23 +54,8 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
         }
     }
 
-    # Computes sample- and batch-specific case weights to be used for all markers.
-    batch.weights <- vector("list", nbatches)
-    for (b in seq_len(nbatches)) { 
-        cur.comp <- batch.comp[[b]]
-        cur.out <- batch.out[[b]]
-        cur.weights <- num.cells <- numeric(length(cur.out$exprs))
-        
-        for (s in seq_along(cur.out$exprs)) {
-            sample.level <- as.character(cur.comp[s])
-            num.cells[s] <- nrow(cur.out$exprs[[s]])
-            if (sample.level %in% use.batches) { 
-                cur.weights[s] <- 1/num.cells[s] * batch.weight[b,sample.level]
-            }
-        }
-
-        batch.weights[[b]] <- rep(cur.weights, num.cells)
-    }
+    # Calculating weights.
+    batch.weights <- .computeCellWeights(batch.out, batch.comp)
 
     # Setting up an output object.
     output <- vector("list", nbatches)
@@ -119,52 +94,50 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
         } else if (curmode=="warp") { 
             # Performing warp-based normalization to a reference.
             converters <- .transformDistr(all.obs, batch.weights, m, target=target, ...)
-            for (b in seq_len(nbatches)) { 
-                converter <- converters[[b]]
-                cur.out <- batch.out[[b]]
-                for (s in seq_along(cur.out$exprs)) {
-                    output[[b]][[s]][,m] <- converter(cur.out$exprs[[s]][,m])                
-                }
-            }        
         } else if (curmode=="range") {
-            # Computing the average max/min.
-            batch.min <- batch.max <- numeric(nbatches)
-            for (b in seq_len(nbatches)) { 
-                cur.obs <- all.obs[[b]]
-                o <- order(cur.obs)
-                cur.obs <- cur.obs[o]
-                cur.wts <- batch.weights[[b]][o]
-
-                # Taking the midpoint of each step, rather than the start/end points.
-                mid.cum.weight <- cumsum(cur.wts) - cur.wts/2
-                total.weight <- sum(cur.wts)
-                
-                # Getting the left/right extreme.
-                out <- approx(mid.cum.weight/total.weight, cur.obs, xout=c(p, 1-p), rule=2)$y
-                batch.min[b] <- out[1]
-                batch.max[b] <- out[2]
-            }
-
-            # Selecting the target batch to perform the normalization.
-            if (is.null(target)) { 
-                targets <- c(mean(batch.min), mean(batch.max))
-            } else {
-                targets <- c(batch.min[target], batch.max[target])
-            }
-
-            # Scaling intensities per batch so that the observed range equals the average range.
-            for (b in seq_len(nbatches)) {
-                current <- c(batch.min[b], batch.max[b])
-                fit <- lm(targets ~ current)
-                cur.out <- batch.out[[b]]
-
-                for (s in seq_along(cur.out$exprs)) {
-                    output[[b]][[s]][,m] <- cur.out$exprs[[s]][,m] * coef(fit)[2] + coef(fit)[1]
-                }
-            }
+            converters <- .rescaleDistr(all.obs, batch.weights, target=target, p=p)
         }
+        for (b in seq_len(nbatches)) { 
+            converter <- converters[[b]]
+            cur.out <- batch.out[[b]]
+            for (s in seq_along(cur.out$exprs)) {
+                output[[b]][[s]][,m] <- converter(cur.out$exprs[[s]][,m])                
+            }
+        }        
     }
     return(output)
+}
+
+.computeCellWeights <- function(batch.out, batch.comp) { 
+    # Computing the average number of samples from each batch to use in correction.
+    comp.batches <- do.call(rbind, lapply(batch.comp, table))
+    ref.comp <- colMeans(comp.batches)
+    batch.weight <- t(ref.comp/t(comp.batches))
+    empty.factors <- colSums(!is.finite(batch.weight)) > 0
+    if (all(empty.factors)) {
+        stop("no level of 'batch.comp' is common to all batches")
+    }
+    use.batches <- colnames(batch.weight)[!empty.factors]
+
+    # Computes sample- and batch-specific case weights to be used for all markers.
+    nbatches <- length(batch.out)
+    batch.weights <- vector("list", nbatches)
+
+    for (b in seq_len(nbatches)) { 
+        cur.comp <- batch.comp[[b]]
+        cur.out <- batch.out[[b]]
+        cur.weights <- num.cells <- numeric(length(cur.out$exprs))
+        
+        for (s in seq_along(cur.out$exprs)) {
+            sample.level <- as.character(cur.comp[s])
+            num.cells[s] <- nrow(cur.out$exprs[[s]])
+            if (sample.level %in% use.batches) { 
+                cur.weights[s] <- 1/num.cells[s] * batch.weight[b,sample.level]
+            }
+        }
+        batch.weights[[b]] <- rep(cur.weights, num.cells)
+    }
+    return(batch.weights)
 }
 
 .transformDistr <- function(all.obs, all.wts, name, target, ...) {
@@ -188,7 +161,7 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
 
     # Applying warping normalization, as described in the flowStats vignette.
     norm <- normalization(normFunction=function(x, parameters, ...) { flowStats::warpSet(x, parameters, ...) },
-                          parameters=name, arguments=list(monwrd=TRUE, ...))
+                          parameters=name, arguments=list(monwrd=TRUE, target=target, ...))
     new.fs <- normalize(fs, norm)
 
     # Defining warp functions (setting warpFuns doesn't really work, for some reason).
@@ -201,3 +174,51 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     return(converter)
 }
 
+.rescaleDistr <- function(all.obs, all.wts, target, p) {
+    # Computing the average max/min.
+    nbatches <- length(all.obs)
+    batch.min <- batch.max <- numeric(nbatches)
+    for (b in seq_len(nbatches)) { 
+        cur.obs <- all.obs[[b]]
+        cur.wts <- all.wts[[b]]
+
+        keep <- cur.wts>0
+        cur.obs <- cur.obs[keep]
+        cur.wts <- cur.wts[keep]
+
+        o <- order(cur.obs)
+        cur.obs <- cur.obs[o]
+        cur.wts <- cur.wts[o]
+
+        # Taking the midpoint of each step, rather than the start/end points. 
+        mid.cum.weight <- cumsum(cur.wts) - cur.wts/2
+        total.weight <- sum(cur.wts)
+        
+        # Getting the left/right extreme.
+        out <- approx(mid.cum.weight/total.weight, cur.obs, xout=c(p, 1-p), rule=2)$y
+        batch.min[b] <- out[1]
+        batch.max[b] <- out[2]
+    }
+
+    # Selecting the target batch to perform the normalization.
+    if (is.null(target)) { 
+        targets <- c(mean(batch.min), mean(batch.max))
+    } else {
+        targets <- c(batch.min[target], batch.max[target])
+    }
+
+    # Scaling intensities per batch so that the observed range equals the average range.
+    converters <- vector("list", nbatches)
+    FUNGEN <- function(fit) {
+        m <- coef(fit)[2]
+        b <- coef(fit)[1]
+        function(x) { x * m + b }
+    }
+
+    for (b in seq_len(nbatches)) {
+        current <- c(batch.min[b], batch.max[b])
+        fit <- lm(targets ~ current)
+        converters[[b]] <- FUNGEN(fit)
+    }
+    return(converters)
+}
