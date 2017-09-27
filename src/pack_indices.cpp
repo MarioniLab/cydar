@@ -1,52 +1,33 @@
 #include "cydar.h"
 #include "packer.h"
+#include "utils.h"
 
-SEXP pack_indices(SEXP assignments, SEXP compact) try {
-    if (!isNewList(assignments)) { 
-        throw std::runtime_error("assignments should be a list");
-    }
+SEXP pack_indices(SEXP assignments, SEXP compact) {
+    BEGIN_RCPP
+
+    const Rcpp::List _assignments(assignments);
     const int ngrps=LENGTH(assignments);
+    const bool compress=check_logical_scalar(compact, "compact specifier");
 
-    if (!isLogical(compact) || LENGTH(compact)!=1) { 
-        throw std::runtime_error("'compact' should be a logical scalar");
-    }
-    const bool compress=asLogical(compact);
+    Rcpp::List output(ngrps);
+    std::deque<int> sorted_ids, temp;
 
-    SEXP output=PROTECT(allocVector(VECSXP, ngrps)), current;
-    try { 
-        std::deque<int> sorted_ids, temp;
-        const int* iptr=NULL;
-        int ix, ndex;
-
-        for (int g=0; g<ngrps; ++g) {
-            current=VECTOR_ELT(assignments, g);
-            if (!isInteger(current)) { 
-                throw std::runtime_error("assignment vectors should be integer");
-            }
-            iptr=INTEGER(current);
-            ndex=LENGTH(current);
+    for (int g=0; g<ngrps; ++g) {
+        const Rcpp::IntegerVector current(_assignments[g]);
             
-            if (compress) {
-                temp.assign(iptr, iptr+ndex);
-                for (ix=0; ix<ndex; ++ix) { --(temp[ix]); } // getting to zero-indexing.
-                pack_index_vector(sorted_ids, temp.begin(), temp.end());
-                SET_VECTOR_ELT(output, g, allocVector(INTSXP, sorted_ids.size()));
-                std::copy(sorted_ids.begin(), sorted_ids.end(), INTEGER(VECTOR_ELT(output, g)));
-            } else {
-                unpack_index_vector(temp, iptr, iptr+ndex);
-                SET_VECTOR_ELT(output, g, allocVector(INTSXP, temp.size()));
-                std::copy(temp.begin(), temp.end(), INTEGER(VECTOR_ELT(output, g)));
-            }
+         if (compress) {
+            temp.assign(current.begin(), current.end());
+            for (auto& t : temp) { --t; } // getting to zero-indexing.
+            pack_index_vector(sorted_ids, temp.begin(), temp.end());
+            output[g]=Rcpp::IntegerVector(sorted_ids.begin(), sorted_ids.end());
 
+        } else {
+            unpack_index_vector(temp, current.begin(), current.end());
+            output[g]=Rcpp::IntegerVector(temp.begin(), temp.end());
         }
-    } catch (std::exception& e) {
-        UNPROTECT(1);
-        throw;
     }
 
-    UNPROTECT(1);
     return output;
-} catch (std::exception& e) {
-    return mkString(e.what());
+    END_RCPP
 }
 

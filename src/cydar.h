@@ -1,18 +1,14 @@
 #ifndef CYDAR_H
 #define CYDAR_H
 
-#include "R.h"
-#include "Rinternals.h"
-#include "R_ext/Rdynload.h"
-#include "R_ext/Visibility.h"
-
-
 #include <stdexcept>
 #include <algorithm>
 #include <map>
 #include <deque>
 #include <bitset>
 #include <cmath>
+
+#include "Rcpp.h"
 
 extern "C" {
 

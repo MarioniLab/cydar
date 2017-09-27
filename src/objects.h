@@ -7,6 +7,7 @@
 #include <memory>
 
 struct naive_holder {
+public:
     naive_holder(SEXP);
     virtual ~naive_holder();
    
@@ -21,8 +22,11 @@ struct naive_holder {
     double compute_marker_sqdist(const double*, const double*) const;    
     virtual void search_all(const double*, double, const bool);
     virtual void search_nn (const double*, size_t, const bool);
-  
-    matrix_info exprs;
+
+    std::deque<size_t>& get_neighbors ();
+    std::deque<double>& get_distances ();
+protected:  
+    const Rcpp::NumericMatrix exprs;
     std::deque<size_t> neighbors;
     std::deque<double> distances;
     typedef std::priority_queue<std::pair<double, int> > nearest;
@@ -30,15 +34,17 @@ struct naive_holder {
 };
 
 struct convex_holder : public naive_holder {
+public:
     convex_holder(SEXP, SEXP, SEXP);
     ~convex_holder();
     void search_all(const double*, double, const bool);
     void search_nn (const double*, size_t, const bool);
 
-    matrix_info centers;
+protected:
+    const Rcpp::NumericMatrix centers;
     std::deque<int> clust_start;
     std::deque<int> clust_ncells;
-    std::deque<const double*> clust_dist;
+    std::deque<const Rcpp::NumericVector> clust_dist;
 };
 
 std::unique_ptr<naive_holder> generate_holder(SEXP, SEXP, SEXP); 

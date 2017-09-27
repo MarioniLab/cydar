@@ -1,14 +1,14 @@
 #ifndef UTILS_H
 #define UTILS_H
+#include "Rcpp.h"
 
-// Check matrix inputs.
+bool check_logical_scalar(Rcpp::RObject x, const char* thing);
 
-struct matrix_info {
-    matrix_info(int, int, const double*);
-    const size_t nrow, ncol;
-    const double* dptr;
-};
+int check_integer_scalar(Rcpp::RObject x, const char* thing);
 
-matrix_info check_matrix(SEXP matrix);
+double check_numeric_scalar(Rcpp::RObject x, const char* thing);
+
+const char* check_string(Rcpp::RObject x, const char* thing);
+
 
 #endif

@@ -3,130 +3,91 @@
 #include "utils.h"
 #include "objects.h"
 
-SEXP compute_hyperstats(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments) try {
-    // Setting up inputs.
-    const matrix_info& EXPRS=check_matrix(exprs);
-    const size_t& nmarkers=EXPRS.nrow;
-    const size_t& ncells=EXPRS.ncol;
-    const double* eptr=EXPRS.dptr;
+SEXP compute_hyperstats(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments) {
+    BEGIN_RCPP 
 
-    if (!isNewList(assignments)) { 
-        throw std::runtime_error("'assignments' must be a list of packed assignments");
-    }
-    const int ngroups=LENGTH(assignments);
+    // Setting up inputs.
+    const Rcpp::NumericMatrix _exprs(exprs);
+    const size_t nmarkers=_exprs.nrow();
+    const size_t ncells=_exprs.ncol();
+
+    const Rcpp::List _assignments(assignments);
+    const int ngroups=_assignments.size();
 
     // Checking samples and computing sample weights.
-    if (!isInteger(nsamp)|| LENGTH(nsamp)!=1) { throw std::runtime_error("number of samples must be an integer scalar"); }
-    const int nsamples=asInteger(nsamp);
+    const int nsamples=check_integer_scalar(nsamp, "number of samples");
     if (nsamples <= 0) { throw std::runtime_error("number of samples must be positive"); }
 
-    if (!isInteger(sample_id) || LENGTH(sample_id)!=ncells) {
+    Rcpp::IntegerVector _sample_id(sample_id);
+    if (_sample_id.size()!=ncells) { 
         throw std::runtime_error("sample IDs should be an integer vector of length equal to the number of cells"); 
     }
-    const int* sample_ids=INTEGER(sample_id);
-    double* sample_weights=(double*)R_alloc(nsamples, sizeof(double));
-    std::fill(sample_weights, sample_weights+nsamples, 0);
-    for (int i=0; i<LENGTH(sample_id); ++i) {
-        const int& cursample=sample_ids[i];
-        if (cursample < 0 || cursample >= nsamples) {
+
+    std::vector<double> sample_weights(nsamples);
+    for (const auto& s : _sample_id) {
+        if (s < 0 || s >= nsamples) {
             throw std::runtime_error("sample IDs out of range");
         }
-        ++(sample_weights[cursample]);
+        ++(sample_weights[s]);
     }
-    for (int i=0; i<nsamples; ++i) { // Reciprocal of the total number of cells.
-        sample_weights[i]=1/sample_weights[i];
+    for (auto& w : sample_weights) { // Reciprocal of the total number of cells.
+        w=1/w;
     }
 
     // Setting up output vectors. 
-    SEXP output=PROTECT(allocVector(VECSXP, 2));
-    try { 
-        std::deque<int*> count_ptrs;
-        SET_VECTOR_ELT(output, 0, allocMatrix(INTSXP, ngroups, nsamples));
-        SEXP current=VECTOR_ELT(output, 0);
-        count_ptrs.push_back(INTEGER(current));
-        std::fill(count_ptrs.back(), count_ptrs.back() + ngroups, 0);
-        for (int inner_si=1; inner_si<nsamples; ++inner_si) { 
-            count_ptrs.push_back(count_ptrs[inner_si-1] + ngroups);
-            std::fill(count_ptrs.back(), count_ptrs.back() + ngroups, 0);
-        }
+    Rcpp::IntegerMatrix outcounts(ngroups, nsamples);
+    Rcpp::NumericMatrix outcoords(ngroups, nmarkers);
 
-        std::deque<double*> coord_ptrs;
-        SET_VECTOR_ELT(output, 1, allocMatrix(REALSXP, ngroups, nmarkers));
-        current=VECTOR_ELT(output, 1);
-        coord_ptrs.push_back(REAL(current));
-        std::fill(coord_ptrs.back(), coord_ptrs.back() + ngroups, R_NaReal);
-        for (size_t mi=1; mi<nmarkers; ++mi) {
-            coord_ptrs.push_back(coord_ptrs[mi-1] + ngroups);
-            std::fill(coord_ptrs.back(), coord_ptrs.back() + ngroups, R_NaReal);
-        }
+    std::deque<std::pair<double, int> > intensities;
+    std::deque<int> collected;
 
-        std::deque<std::pair<double, int> > intensities;
-        std::deque<int> collected;
-        SEXP curass;
-
-        for (int g=0; g<ngroups; ++g) {
-            curass=VECTOR_ELT(assignments, g);
-            if (!isInteger(curass)) { 
-                throw std::runtime_error("assignment vectors should be integer");
-            }
-            const int* iptr=INTEGER(curass);
-            int ndex=LENGTH(curass);
-            unpack_index_vector(collected, iptr, iptr+ndex);
-            for (size_t icx=0; icx<collected.size(); ++icx) { --(collected[icx]); }
+    for (int g=0; g<ngroups; ++g) {
+        const Rcpp::IntegerVector curass=_assignments[g];
+        unpack_index_vector(collected, curass.begin(), curass.end());
+        for (size_t icx=0; icx<collected.size(); ++icx) { --(collected[icx]); } // Getting to 1-based indexing.
             
-            // Computing counts and total weights.
-            double total_weight=0;
-            for (int icx=0; icx<collected.size(); ++icx) {
-                const int& cursample=sample_ids[collected[icx]];
-                ++(count_ptrs[cursample][0]);
-                total_weight+=sample_weights[cursample];
-            }
-            const double midweight=total_weight/2;
+        // Computing counts and total weights.
+        auto curcounts=outcounts.row(g);
+        double total_weight=0;
+        for (const auto& c : collected) { 
+            const int& cursample=_sample_id[c];
+            ++(curcounts[cursample]);
+            total_weight+=sample_weights[cursample];
+        }
 
-            // Setting the weighted medians (to avoid large samples from dominating the location).
-            intensities.resize(collected.size());
-            for (size_t mi=0; mi<nmarkers; ++mi) {
-                const double* marker_exprs=eptr + mi;
-                for (size_t icx=0; icx<collected.size(); ++icx) {
-                    const int& curneighbor=collected[icx];
-                    intensities[icx].first=marker_exprs[nmarkers*curneighbor];
-                    intensities[icx].second=sample_ids[curneighbor];
-                }
-                
-                std::sort(intensities.begin(), intensities.end());
-                double cumweight=0;
-                size_t midpoint;
-                for (midpoint=0; midpoint<intensities.size(); ++midpoint) {
-                    cumweight += sample_weights[intensities[midpoint].second];
-                    if (cumweight/total_weight >= 0.5) { break; }
-                }
-               
-                if (midpoint==intensities.size()) {
-                    // Only possible if total_weights is zero. 
-                    coord_ptrs[mi][0]=R_NaReal;
+        // Setting the weighted medians (to avoid large samples from dominating the location).
+        intensities.resize(collected.size());
+        auto curcoords=outcoords.row(g);
+        for (size_t mi=0; mi<nmarkers; ++mi) {
+            auto curexprs=_exprs.row(mi);
+            for (size_t icx=0; icx<collected.size(); ++icx) {
+                const int& curneighbor=collected[icx];
+                intensities[icx].first=curexprs[curneighbor];
+                intensities[icx].second=_sample_id[curneighbor];
+            }
+
+            std::sort(intensities.begin(), intensities.end());
+            double cumweight=0;
+            size_t midpoint=0;
+            for (; midpoint<intensities.size(); ++midpoint) {
+                cumweight += sample_weights[intensities[midpoint].second];
+                if (cumweight/total_weight >= 0.5) { break; }
+            }
+   
+            if (midpoint==intensities.size()) {
+                // Only possible if total_weights is zero. 
+                curcoords[mi]=R_NaReal;
+            } else {
+                if (cumweight/total_weight==0.5) {
+                    curcoords[mi]=(intensities[midpoint].first + intensities[midpoint+1].first)/2;
                 } else {
-                    if (cumweight/total_weight==0.5) {
-                        coord_ptrs[mi][0]=(intensities[midpoint].first + intensities[midpoint+1].first)/2;
-                    } else {
-                        coord_ptrs[mi][0]=intensities[midpoint].first;                
-                    }
+                    curcoords[mi]=intensities[midpoint].first;                
                 }
-                ++(coord_ptrs[mi]);
-            }
-
-            // Bumping forward the ptrs.
-            for (int si=0; si<nsamples; ++si) {
-                ++(count_ptrs[si]);
             }
         }
-    } catch (std::exception& e) {
-        UNPROTECT(1);
-        throw;
     }
 
-    UNPROTECT(1);
-    return output;
-} catch (std::exception& e) {
-    return mkString(e.what());
+    return Rcpp::List::create(outcounts, outcoords);
+    END_RCPP
 }
 

@@ -1,12 +1,12 @@
 Package: cydar
-Version: 1.1.2
-Date: 2017-07-18
+Version: 1.1.3
+Date: 2017-09-27
 Title: Using Mass Cytometry for Differential Abundance Analyses
 Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
 Depends: BiocParallel, SummarizedExperiment
 Imports: plotrix, viridis, methods, shiny, graphics, stats, grDevices,
-        S4Vectors, flowCore, Biobase
+        S4Vectors, flowCore, Biobase, Rcpp
 Suggests: ncdfFlow, testthat, BiocGenerics, knitr, edgeR, limma,
         glmnet, BiocStyle, flowStats
 biocViews: FlowCytometry, MultipleComparison, Proteomics, SingleCell
@@ -18,4 +18,5 @@ Description: Identifies differentially abundant populations between
 License: GPL-3
 NeedsCompilation: yes
 VignetteBuilder: knitr
+LinkingTo: Rcpp
 SystemRequirements: C++11

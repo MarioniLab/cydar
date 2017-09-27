@@ -22,6 +22,8 @@ importFrom("graphics", plot, points, lines, par, polygon, text, segments,
 
 importFrom("grDevices", rainbow, col2rgb)
 
+importFrom("Rcpp", sourceCpp)
+
 importFrom("shiny", 
         column, fluidPage, fluidRow, 
         pageWithSidebar, sidebarPanel, mainPanel, headerPanel, h4, hr, br, HTML,
