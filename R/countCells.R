@@ -42,21 +42,16 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
                     cluster.centers=cluster.centers, cluster.info=cluster.info, filter=filter, 
                     BPPARAM=BPPARAM)
     
-    out.cells <- out.index <- vector("list", length(out))
-    for (i in seq_along(out)) {
-        if (is.character(out[[i]])) { stop(out[[i]]) }
-        out.cells[[i]] <- out[[i]]$cells
-        out.index[[i]] <- out[[i]]$index
-    }
-
-    out.index <- unlist(out.index, recursive=FALSE)
+    out.cells <- lapply(out, "[[", i="cells")
     out.cells <- unlist(out.cells, recursive=FALSE)
     names(out.cells) <- NULL
+
+    out.index <- lapply(out, "[[", i="index")
+    out.index <- unlist(out.index, recursive=FALSE)
     names(out.index) <- NULL
 
     # Computing the associated statistics.
     out.stats <- .Call(cxx_compute_hyperstats, ci, length(samples), sample.id, out.cells)
-    if (is.character(out.stats)) stop(out.stats)
     out.counts <- out.stats[[1]]
     colnames(out.counts) <- samples
     out.coords <- matrix(NA_real_, length(out.cells), nmarkers(x))

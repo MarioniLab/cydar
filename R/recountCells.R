@@ -21,14 +21,12 @@ recountCells <- function(x, markers, tol=0.5)
     all.assign <- cellAssignments(x)
     ci <- .get_used_intensities(x, used)
     out <- .Call(cxx_recount_cells, ci, distance, rowData(x)$center.cell-1L, all.assign)
-    if (is.character(out)) stop(out)
     combined.ass <- out[[1]]
 
     # Computing assorted statistics.
     nsamples <- ncol(x)
     sample.id <- cellData(x)$sample.id - 1L
     out.stats <- .Call(cxx_compute_hyperstats, ci, nsamples, sample.id, combined.ass) 
-    if (is.character(out.stats)) stop(out.stats)
 
     combined.counts <- out.stats[[1]]
     colnames(combined.counts) <- sampleNames(x)

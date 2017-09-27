@@ -43,7 +43,6 @@ spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALS
         } else { 
             # Figuring out the bandwidth for KDE, as the median of distances to the n-th neighbour.
             allbands <- .Call(cxx_find_knn, new.coords, cluster.centers, cluster.info, neighbors, -1L, NULL)
-            if (is.character(allbands)) { stop(allbands) }
             bandwidth <- median(allbands)
         }
     } else {
@@ -56,7 +55,6 @@ spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALS
 
     # Computing densities with a tricube kernel.
     densities <- .Call(cxx_compute_density, new.coords, cluster.centers, cluster.info, bandwidth)
-    if (is.character(densities)) { stop(densities) }
     w <- 1/densities
     w[hyper.ids] <- w # Getting back to original ordering.
 

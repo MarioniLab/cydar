@@ -5,9 +5,6 @@ packIndices <- function(assignments)
 # created 28 November 2016
 {
     out <- .Call(cxx_pack_indices, assignments, TRUE)
-    if (is.character(out)) { 
-        stop(out)
-    }
     return(out)
 }
 
@@ -18,8 +15,5 @@ unpackIndices <- function(assignments)
 # created 28 November 2016    
 {
     out <- .Call(cxx_pack_indices, assignments, FALSE)
-    if (is.character(out)) {
-        stop(out)
-    }
     return(out)
 }

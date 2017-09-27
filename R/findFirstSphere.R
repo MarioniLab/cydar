@@ -45,7 +45,6 @@ findFirstSphere <- function(coords, pvalues, threshold=1, block=NULL, naive=FALS
     threshold <- as.double(threshold)
     actual_order <- order(pvalues[hyper.ids]) - 1L
     out <- .Call(cxx_drop_redundant, actual_order, new.coords, cluster.centers, cluster.info, threshold)
-    if (is.character(out)) { stop(out) }
    
     # Generating output with the original ordering in 'coords' 
     out[hyper.ids] <- out

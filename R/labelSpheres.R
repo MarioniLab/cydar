@@ -36,9 +36,6 @@ labelSpheres <- function(coords, labels, naive=FALSE)
 
     # Finding closest labelled hypersphere for each other hypersphere.
     closest <- .Call(cxx_find_knn, label.coords, cluster.centers, cluster.info, 1L, -2L, t(coords)) 
-    if (is.character(closest)) {
-        stop(closest)
-    }
     new.labels <- fresh.labels[hyper.ids][closest+1L]
     return(new.labels)
 }

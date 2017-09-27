@@ -13,7 +13,6 @@ medIntensities <- function(x, markers)
 
     ci <- .get_used_intensities(x, used)
     out <- .Call(cxx_compute_median_int, ci, length(samples), sample.id, cellAssignments(x))
-    if (is.character(out)) stop(out)
     
     used.markers <- markernames(x)[used]
     old.names <- assayNames(x)

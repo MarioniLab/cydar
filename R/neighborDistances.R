@@ -26,9 +26,6 @@ neighborDistances <- function(x, neighbors=50, downsample=50, as.tol=TRUE, naive
     # Computing distances.
     ci <- .get_used_intensities(x, used)
     distances <- .Call(cxx_get_nndist, ci, cluster.centers, cluster.info, neighbors, downsample) 
-    if (is.character(distances)) {
-        stop(distances)
-    }
 
     # Converting to tolerance values, if so desired.
     distances <- t(distances)
