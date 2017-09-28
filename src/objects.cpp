@@ -130,7 +130,7 @@ convex_holder::convex_holder(SEXP ex, SEXP cen, SEXP info) : naive_holder(ex), c
 
         clust_start.push_back(check_integer_scalar(current[0], "starting ID"));
 
-        Rcpp::NumericVector distances(current[1]);
+        const Rcpp::NumericVector distances(current[1]);
         clust_dist.push_back(distances);
         clust_ncells.push_back(distances.size());
     }
@@ -144,15 +144,15 @@ void convex_holder::search_all (const double* current, double threshold, const b
     distances.clear();
     const size_t& nmarkers=exprs.nrow();
     const size_t& ncenters=centers.ncol();
-    const double* centerx=centers.begin();
+    const double* center_ptr=centers.begin();
     const double threshold2=threshold*threshold; // squaring.
 
     // Computing the distance to each center, and deciding whether to proceed for each cluster.
-    for (size_t center=0; center<ncenters; ++center, centerx+=nmarkers) {
+    for (size_t center=0; center<ncenters; ++center, center_ptr+=nmarkers) {
         const int& cur_ncells=clust_ncells[center];
         if (!cur_ncells) { continue; }
 
-        const double dist2center=std::sqrt(compute_marker_sqdist(current, centerx));
+        const double dist2center=std::sqrt(compute_marker_sqdist(current, center_ptr));
         auto dIt=clust_dist[center].begin();
         const double& maxdist=*(dIt + cur_ncells - 1);
         if (threshold + maxdist < dist2center) { continue; }
@@ -167,10 +167,10 @@ void convex_holder::search_all (const double* current, double threshold, const b
 //        const int lastcell=std::upper_bound(cur_dist + firstcell, cur_dist + cur_ncells, upper_bd) - cur_dist;
         
         const int& cur_start=clust_start[center];
-        const double* other=exprs.begin() + nmarkers * (cur_start + firstcell);
-        for (int index=firstcell; index<cur_ncells; ++index, other+=nmarkers) {
+        const double* other_cell=exprs.begin() + nmarkers * (cur_start + firstcell);
+        for (int index=firstcell; index<cur_ncells; ++index, other_cell+=nmarkers) {
 
-            const double dist2cell2=compute_marker_sqdist(current, other);
+            const double dist2cell2=compute_marker_sqdist(current, other_cell);
             if (dist2cell2 <= threshold2) {
                 neighbors.push_back(cur_start + index);
                 if (dist) {
@@ -187,15 +187,15 @@ void convex_holder::search_nn(const double* current, size_t nn, const bool dist)
     distances.clear();
     const size_t& nmarkers=exprs.nrow();
     const size_t& ncenters=centers.ncol();
-    const double* centerx=centers.begin();
+    const double* center_ptr=centers.begin();
     double threshold2 = R_PosInf;
 
     /* Computing distances to all centers and sorting them.
      * The aim is to go through the nearest centers first, to get the shortest 'threshold' possible.
      */
     std::deque<std::pair<double, size_t> > center_order(ncenters); 
-    for (size_t center=0; center<ncenters; ++center, centerx+=nmarkers) {
-        center_order[center].first=std::sqrt(compute_marker_sqdist(current, centerx));
+    for (size_t center=0; center<ncenters; ++center, center_ptr+=nmarkers) {
+        center_order[center].first=std::sqrt(compute_marker_sqdist(current, center_ptr));
         center_order[center].second=center;
     }
     std::sort(center_order.begin(), center_order.end());
@@ -223,13 +223,13 @@ void convex_holder::search_nn(const double* current, size_t nn, const bool dist)
         }
 
         const int& cur_start=clust_start[center];
-        const double* other=exprs.begin() + nmarkers * (cur_start + firstcell);
-        for (int index=firstcell; index<cur_ncells; ++index, other+=nmarkers) {
+        const double* other_cell=exprs.begin() + nmarkers * (cur_start + firstcell);
+        for (int index=firstcell; index<cur_ncells; ++index, other_cell+=nmarkers) {
 //            if (cur_dist[index] > upper_bd) { 
 //                break; 
 //            }
 
-            const double dist2cell2=compute_marker_sqdist(current, other);                   
+            const double dist2cell2=compute_marker_sqdist(current, other_cell);                   
             if (current_nearest.size() < nn || dist2cell2 <= threshold2) {
                 current_nearest.push(std::make_pair(dist2cell2, cur_start + index));
                 if (current_nearest.size() > nn) { 

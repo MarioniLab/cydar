@@ -3,7 +3,7 @@
 SEXP drop_redundant (SEXP actual_order, SEXP coords, SEXP centers, SEXP clust_info, SEXP threshold) {
     BEGIN_RCPP
 
-    Rcpp::NumericMatrix _coords(coords);
+    const Rcpp::NumericMatrix _coords(coords);
     auto searcher=generate_holder(coords, centers, clust_info);
     const size_t nhyper=searcher->get_ncells();
     const size_t nmarkers=searcher->get_nmarkers();
@@ -11,7 +11,7 @@ SEXP drop_redundant (SEXP actual_order, SEXP coords, SEXP centers, SEXP clust_in
     const double thresh=check_numeric_scalar(threshold, "threshold");
     const double radius=thresh * std::sqrt(nmarkers);
 
-    Rcpp::IntegerVector ordering(actual_order);
+    const Rcpp::IntegerVector ordering(actual_order);
     if (ordering.size()!=nhyper) {
         throw std::runtime_error("length of actual_order order vector must be equal to number of hyperspheres");
     }

@@ -18,7 +18,7 @@ SEXP compute_median_int(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
     const int nsamples=check_integer_scalar(nsamp, "number of samples");
     if (nsamples <= 0) { throw std::runtime_error("number of samples must be positive"); }
 
-    Rcpp::IntegerVector _sample_id(sample_id);
+    const Rcpp::IntegerVector _sample_id(sample_id);
     if (_sample_id.size()!=ncells) { 
         throw std::runtime_error("sample IDs should be an integer vector of length equal to the number of cells"); 
     }

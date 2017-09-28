@@ -7,7 +7,7 @@ SEXP count_cells(SEXP exprs, SEXP distance, SEXP centers, SEXP cluster_info, SEX
 
     // Checking distances and chosen cells.
     const double threshold=check_numeric_scalar(distance, "distance");
-    Rcpp::IntegerVector _curcells(curcells);
+    const Rcpp::IntegerVector _curcells(curcells);
     const int N=_curcells.size();
     const int ncells=searcher->get_ncells();
     const size_t& nmarkers=searcher->get_nmarkers();
