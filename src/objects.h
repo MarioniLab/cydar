@@ -3,8 +3,6 @@
 
 #include "cydar.h"
 #include "utils.h"
-#include <queue>
-#include <memory>
 
 struct naive_holder {
 public:
@@ -44,7 +42,7 @@ protected:
     const Rcpp::NumericMatrix centers;
     std::deque<int> clust_start;
     std::deque<int> clust_ncells;
-    std::deque<const Rcpp::NumericVector> clust_dist;
+    std::deque<Rcpp::NumericVector> clust_dist;
 };
 
 std::unique_ptr<naive_holder> generate_holder(SEXP, SEXP, SEXP); 

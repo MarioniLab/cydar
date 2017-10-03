@@ -5,8 +5,10 @@
 #include <algorithm>
 #include <map>
 #include <deque>
-#include <bitset>
 #include <cmath>
+#include <vector>
+#include <queue>
+#include <memory>
 
 #include "Rcpp.h"
 
