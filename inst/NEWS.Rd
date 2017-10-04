@@ -2,7 +2,7 @@
 \title{cydar News}
 \encoding{UTF-8}
 
-\section{Version 1.1.1}{\itemize{
+\section{Version 1.1.4}{\itemize{
 \item Added labelSpheres() function for labelling unannotated hyperspheres.
 
 \item Exported multiIntHist() for plotting multiple intensity histograms.
