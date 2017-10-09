@@ -2,8 +2,6 @@ useDynLib(cydar, .registration=TRUE, .fixes="cxx_")
 
 import(BiocParallel, SummarizedExperiment, S4Vectors, methods)
 
-importFrom("plotrix", color.scale)
-
 importFrom("viridis", viridis)
 
 importFrom("stats", coef, kmeans, median, quantile, lm.fit, density, approx, lm,
