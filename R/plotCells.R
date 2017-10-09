@@ -3,7 +3,7 @@ plotCellLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.out=
 #
 # written by Aaron Lun
 # created 20 April 2016
-# last modified 8 June 2016
+# last modified 9 October 2017
 {
     if (is.null(max.logFC)) {
         max.logFC <- max(abs(logFC))
@@ -11,8 +11,9 @@ plotCellLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.out=
         logFC[logFC < -max.logFC] <- -max.logFC
         logFC[logFC > max.logFC] <- max.logFC
     }
-    logFC.col <- color.scale(logFC, c(0,zero.col,1), c(0,zero.col,0), c(1,zero.col,0), 
-                             xrange=c(-max.logFC, max.logFC))
+
+    # Linear interpolator of colours.
+    logFC.col <- .interpolate_cols(logFC, max.logFC, left=c(0,0,1), middle=rep(zero.col, 3), right=c(1,0,0))
 
     if (pch %in% 21:25) {           
         plot(x, y, pch=pch, bg=logFC.col, ...)
@@ -21,10 +22,35 @@ plotCellLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.out=
     }
                           
     values <- seq(from=-max.logFC, to=max.logFC, length.out=length.out)
-    stored <- color.scale(values, c(0,zero.col,1), c(0,zero.col,0), c(1,zero.col,0), 
-                          xrange=c(-max.logFC, max.logFC))
+    stored <- .interpolate_cols(values, max.logFC, left=c(0,0,1), middle=rep(zero.col, 3), right=c(1,0,0))
     names(stored) <- values
     return(invisible(stored))
+}
+
+.interpolate_cols <- function(val, max.val, left, middle, right) {
+    prop <- val/max.val
+    prop[prop < -1] <- -1
+    prop[prop > 1] <- 1
+
+    pos <- prop > 0 
+    pos.output <- vector("list", 3)
+    for (i in seq_along(pos.output)) { 
+        grad <- right[i] - middle[i]
+        pos.output[[i]] <- grad * prop[pos] + middle[i] 
+    }
+    pos.col <- rgb(pos.output[[1]], pos.output[[2]], pos.output[[3]])
+
+    neg.output <- vector("list", 3)
+    for (i in seq_along(neg.output)) { 
+        grad <- left[i] - middle[i]
+        neg.output[[i]] <- grad * -prop[!pos] + middle[i] 
+    }
+    neg.col <- rgb(neg.output[[1]], neg.output[[2]], neg.output[[3]])
+
+    all.cols <- character(length(pos))
+    all.cols[pos] <- pos.col
+    all.cols[!pos] <- neg.col
+    return(all.cols)
 }
 
 plotCellIntensity <- function(x, y, intensity, irange=NULL, length.out=100, pch=16, ...) 
