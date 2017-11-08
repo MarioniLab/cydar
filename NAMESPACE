@@ -18,7 +18,7 @@ importFrom("Biobase", AnnotatedDataFrame)
 importFrom("graphics", plot, points, lines, par, polygon, text, segments,
     legend, hist, plot.new)
 
-importFrom("grDevices", rainbow, col2rgb)
+importFrom("grDevices", rainbow, col2rgb, rgb)
 
 importFrom("Rcpp", sourceCpp)
 
