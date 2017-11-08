@@ -142,7 +142,7 @@ interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL,
         }
 
         if (!is.null(add.plot)) { 
-            reactiveAddPlot <- reactive({ add.plot(input$gotonum, x) })
+            reactiveAddPlot <- reactive({ add.plot(as.integer(input$gotonum), x) })
             output$addplots <- renderPlot({ reactiveAddPlot() })
         }
 
