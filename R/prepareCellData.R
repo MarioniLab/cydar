@@ -25,14 +25,15 @@ prepareCellData <- function(x, markers=NULL, ...)
     metadata(output)$cydar <- list(
         precomputed=reorg,
         markers=marker.names[used],
-        sample.id=sample.id
+        sample.id=sample.id[reorg$order]
     )
     output
 }
 
 #' @importFrom methods is
 #' @importClassesFrom ncdfFlow ncdfFlowSet
-#' @importFrom Biobase sampleNames colnames
+#' @importFrom Biobase sampleNames 
+#' @importFrom BiocGenerics colnames
 #' @importFrom flowCore exprs
 .pull_out_data <- function(x)
 # Pulling out data so we don't have to rely on ncdfFlowSet input.

@@ -42,7 +42,7 @@ CyData <- function(...) {
 .raw_precomputed <- function(x) metadata(x)$cydar$precomputed
 
 #' @importFrom S4Vectors metadata
-.raw_sample_ids <- function(x) metadata(x)$cydar$sample.ids
+.raw_sample_id <- function(x) metadata(x)$cydar$sample.id
 
 #' @importFrom SummarizedExperiment rowData
 .raw_cellAssignments <- function(x) rowData(x)$cellAssignments
@@ -50,14 +50,14 @@ CyData <- function(...) {
 #' @importFrom SummarizedExperiment rowData
 .raw_intensities <- function(x) rowData(x)$intensities
 
-setGeneric("cellAssignments<-", function(x) standardGeneric("cellAssignments<-"))
+setGeneric("cellAssignments<-", function(x, value) standardGeneric("cellAssignments<-"))
 
 setReplaceMethod("cellAssignments", "CyData", function(x, value) {
     rowData(x)$cellAssignments <- value
     return(x)
 })
 
-setGeneric("intensities<-", function(x) standardGeneric("intensities<-"))
+setGeneric("intensities<-", function(x, value) standardGeneric("intensities<-"))
 
 setReplaceMethod("intensities", "CyData", function(x, value) {
     rowData(x)$intensities <- value
