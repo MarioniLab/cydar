@@ -31,10 +31,27 @@ setMethod("cbind", "CyData", function(..., deparse.level=1) {
 
 # Defining a stub constructor.
 
+#' @export
 #' @importFrom SummarizedExperiment SummarizedExperiment
 CyData <- function(...) {
     new("CyData", SummarizedExperiment(...))
 }
+
+scat <- function(fmt, vals=character(), exdent=2, ...) {
+    vals <- ifelse(nzchar(vals), vals, "''")
+    lbls <- paste(S4Vectors:::selectSome(vals), collapse=" ")
+    txt <- sprintf(fmt, length(vals), lbls)
+    cat(strwrap(txt, exdent=exdent, ...), sep="\n")
+}
+
+#' @export
+#' @importFrom methods show
+#' @importFrom flowCore markernames
+setMethod("show", signature("CyData"), function(object) {
+    callNextMethod()
+    scat("markers(%d): %s\n", markernames(object))
+    cat(sprintf("cells: %i\n", ncol(.raw_precomputed(object)$data)))
+})
 
 ## Defining some getters and setters for internal use.
 
