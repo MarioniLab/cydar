@@ -1,5 +1,6 @@
 #' @export
 #' @importFrom kmknn precluster
+#' @importFrom methods as
 prepareCellData <- function(x, markers=NULL, ...) 
 # Converts it into a format more suitable for high-speed analysis.
 # Also does k-means clustering to generate the necessary clusters.
@@ -14,7 +15,7 @@ prepareCellData <- function(x, markers=NULL, ...)
 
     exprs <- do.call(rbind, exprs.list)
     sample.id <- rep(seq_along(exprs.list), sapply(exprs.list, nrow))
-    cell.id <- unlist(lapply(exprs.list, FUN=function(exprs) seq_len(ncol(exprs)) ))
+    cell.id <- unlist(lapply(exprs.list, FUN=function(exprs) seq_len(nrow(exprs)) ))
 
     # Picking markers to use.
     used <- .chosen_markers(markers, marker.names)
@@ -22,14 +23,14 @@ prepareCellData <- function(x, markers=NULL, ...)
     reorg <- precluster(exprs[,used], ...)
   
     # Collating the output. 
-    output <- CyData(colData=DataFrame(row.names=sample.names))
+    output <- SummarizedExperiment(colData=DataFrame(row.names=sample.names))
     metadata(output)$cydar <- list(
         precomputed=reorg,
         markers=marker.names[used],
         sample.id=sample.id[reorg$order],
-        sample.id=cell.id[reorg$order]
+        cell.id=cell.id[reorg$order]
     )
-    output
+    as(output, "CyData")
 }
 
 #' @importFrom methods is

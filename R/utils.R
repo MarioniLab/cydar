@@ -44,10 +44,16 @@
 
 .downsample <- function(x, downsample) 
 # This determines which points should be used upon downsampling.
-# Note that downsampling is done _within_ each batch, hence the use of 'cell.id' via .raw_cell_index().
-# We then have to use 'ordering' as 'i' is relative to the reordered indices, and we need it on the merged indices.
+# There are three levels of indices that we need to consider:
+#   i) the ordering of cells within each batch as originally supplied, stored as 'cell.id'.
+#  ii) the ordering of cells in the merged matrix but _before_ reordering, stored as 'precomputed$order'.
+# iii) the actual ordering of cells in the columns of the expression matrix returned by 'precluster()'.
+# 
+# Downsampling is done based on every 'nth' cell, using the ordering in (i).
+# Note that 'cell.id' is already permuted to reflect the reordered matrix in (iii).
+# Thus, 'i' refers to the columns of the reordered matrix that we would like to use for neighbour searching.
+# However, findKNN() and friends require the indices of the matrix before reordering; hence the use of (ii).
 {
-    ordering <- .raw_precomputed(x)$order
-    i <- ((.raw_cell_index(x)[ordering] - 1L) %% as.integer(downsample))==0L
-    ordering[i]
+    i <- ((.raw_cell_id(x) - 1L) %% as.integer(downsample))==0L
+    .raw_precomputed(x)$order[i]
 }
