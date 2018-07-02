@@ -1,3 +1,6 @@
+#' @export
+#' @importFrom flowCore flowFrame
+#' @importFrom Biobase AnnotatedDataFrame
 poolCells <- function(x, equalize=TRUE, n=NULL)
 # This function creates a flowFrame from cells pooled from multiple samples.
 # The idea is to estimate transformation and gating parameters from the pool,
@@ -6,7 +9,6 @@ poolCells <- function(x, equalize=TRUE, n=NULL)
 # written by Aaron Lun
 # created 15 December 2016
 {
-    on.exit({gc()}) # Getting rid of huge memory structures that have built up.
     cell.data <- .pull_out_data(x)
 
     if (equalize) { 
