@@ -1,3 +1,4 @@
+#' @export
 diffIntDistr <- function(..., markers=NULL, npts=200) 
 # Computes several matrices of differences between samples
 # in the same and different batches. Distances in the intensity
@@ -5,7 +6,6 @@ diffIntDistr <- function(..., markers=NULL, npts=200)
 #
 # written by Aaron Lun
 # created 13 January 2017
-# last modified 21 March 2017 
 {
     # Setting up inputs.
     all.out <- list(...)

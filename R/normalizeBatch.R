@@ -141,8 +141,8 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
 }
 
 #' @importClassesFrom flowCore flowSet
-#' @importFrom flowCore flowFrame
-#' @importFrom flowStats normalization warpSet
+#' @importFrom flowCore flowFrame normalization
+#' @importFrom flowStats warpSet
 #' @importFrom stats splinefun
 .transformDistr <- function(all.obs, all.wts, name, target, ...) {
     # Subsample intensities proportional to weights.
