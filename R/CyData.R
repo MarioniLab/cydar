@@ -29,6 +29,7 @@ setMethod("cbind", "CyData", function(..., deparse.level=1) {
     callNextMethod()
 })
 
+################################################
 # Defining a stub constructor.
 
 #' @export
@@ -53,10 +54,13 @@ setMethod("show", signature("CyData"), function(object) {
     cat(sprintf("cells: %i\n", ncol(.raw_precomputed(object)$data)))
 })
 
+################################################
 ## Defining some getters and setters for internal use.
 
 #' @importFrom S4Vectors metadata
 .raw_precomputed <- function(x) metadata(x)$cydar$precomputed
+
+.raw_cellIntensities <- function(x) .raw_precomputed(x)$data
 
 #' @importFrom S4Vectors metadata
 .raw_sample_id <- function(x) metadata(x)$cydar$sample.id
@@ -81,6 +85,7 @@ setReplaceMethod("intensities", "CyData", function(x, value) {
     return(x)
 })
 
+################################################
 ## Defining some getters for external use.
 
 #' @export
