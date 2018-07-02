@@ -1,9 +1,10 @@
+#' @export
+#' @importFrom graphics plot
 plotCellLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.out=100, pch=16, ...) 
 # Visualizes the cells with appropriate coloration, using a PCA plot by default.
 #
 # written by Aaron Lun
 # created 20 April 2016
-# last modified 9 October 2017
 {
     if (is.null(max.logFC)) {
         max.logFC <- max(abs(logFC))
@@ -27,6 +28,7 @@ plotCellLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.out=
     return(invisible(stored))
 }
 
+#' @importFrom grDevices rgb
 .interpolate_cols <- function(val, max.val, left, middle, right) {
     prop <- val/max.val
     prop[prop < -1] <- -1
@@ -53,12 +55,13 @@ plotCellLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.out=
     return(all.cols)
 }
 
+#' @export
+#' @importFrom graphics plot
 plotCellIntensity <- function(x, y, intensity, irange=NULL, length.out=100, pch=16, ...) 
 # Visualizes the cells with appropriate coloration, using a PCA plot by default.
 #
 # written by Aaron Lun
 # created 20 April 2016
-# last modified 8 June 2016
 {
     if (is.null(irange)) { 
         irange <- range(intensity)
