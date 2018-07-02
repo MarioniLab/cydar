@@ -9,15 +9,20 @@ setClass("CyData", contains="SummarizedExperiment")
 setValidity2("CyData", function(object) {
     msg <- character(0)
         
-    raw_si <- .raw_sample_id(x)
-    if (!is.null(raw_si) || all(raw_si > 0L & raw_si <= ncol(object))){ 
+    raw_sid <- .raw_sample_id(x)
+    if (!is.null(raw_sid) || all(raw_sid > 0L & raw_sid <= ncol(object))){ 
         msg <- c(msg, "missing or invalid sample IDs")
     }
 
-    raw_ci <- .raw_cellIntensities(x)
-    raw_m <- markernames(x)
-    if (!identical(length(raw_m), nrow(raw_ci))) {
+    raw_cin <- .raw_cellIntensities(x)
+    raw_markers <- markernames(x)
+    if (!identical(length(raw_markers), nrow(raw_cin))) {
         msg <- c(msg, "mismatch in number of markers and dimensionality of cell intensity matrix")
+    }
+
+    raw_cid <- .raw_sample_id(x)
+    if (!is.null(raw_cid) || all(raw_cid > 0L & raw_cid <= ncol(raw_cin))){ 
+        msg <- c(msg, "missing or invalid cell IDs")
     }
 
     if (length(msg)) return(msg) 
@@ -80,15 +85,18 @@ setMethod("show", signature("CyData"), function(object) {
 ## Defining some getters and setters for internal use.
 
 #' @importFrom S4Vectors metadata
-.raw_precomputed <- function(x) metadata(x)$cydar$precomputed
+.raw <- function(x) metadata(x)$cydar
+
+.raw_precomputed <- function(x) .raw(x)$precomputed
 
 .raw_cellIntensities <- function(x) .raw_precomputed(x)$data
 
-#' @importFrom S4Vectors metadata
-.raw_sample_id <- function(x) metadata(x)$cydar$sample.id
+.raw_sample_id <- function(x) .raw(x)$sample.id
 
-#' @importFrom S4Vectors metadata
-.raw_center_cell <- function(x) metadata(x)$cydar$center.cell
+.raw_cell_id <- function(x) .raw(x)$cell.id
+
+#' @importFrom SummarizedExperiment rowData
+.raw_center_cell <- function(x) rowData(x)$center.cell
 
 #' @importFrom SummarizedExperiment rowData
 .raw_cellAssignments <- function(x) rowData(x)$cellAssignments
