@@ -1,3 +1,5 @@
+#' @export
+#' @importFrom kmknn findKNN findNeighbors precluster
 spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALSE) 
 # This controls the spatial FDR across a set of plot coordinates.
 # Each point is weighted by the reciprocal of its density, based on the specified 'radius'.
@@ -5,7 +7,6 @@ spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALS
 #
 # written by Aaron Lun
 # created 23 May 2016
-# last modified 15 May 2017
 {
     if (length(pvalues)!=nrow(coords)) { stop("coords 'nrow' and p-value vector length are not the same") }
     colnames(coords) <- seq_len(ncol(coords)) # dummy colnames to keep it happy.
@@ -18,22 +19,9 @@ spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALS
         pvalues <- pvalues[haspval]
     }
 
-    # Preparing data for counting.
-    coords <- as.matrix(coords)
-    npts <- nrow(coords)
-    if (!naive) { 
-        converted <- .reorganize_cells(exprs=coords, sample.id=rep(1L, npts), cell.id=seq_len(npts))
-        new.coords <- converted$exprs
-        metadata <- converted$metadata
-        hyper.ids <- converted$cell.id
-    } else {
-        new.coords <- t(coords)
-        hyper.ids <- seq_len(npts)
-        metadata <- list()
-    }
-    cluster.centers <- metadata$cluster.centers
-    cluster.info <- metadata$cluster.info
+    pre <- precluster(t(coords))
 
+    # Defining the bandwidth.        
     if (is.null(bandwidth)) { 
         neighbors <- as.integer(neighbors)
         if (neighbors==0L) { 
@@ -42,21 +30,22 @@ spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALS
             stop("'neighbors' must be a non-negative integer") 
         } else { 
             # Figuring out the bandwidth for KDE, as the median of distances to the n-th neighbour.
-            allbands <- .Call(cxx_find_knn, new.coords, cluster.centers, cluster.info, neighbors, -1L, NULL)
-            bandwidth <- median(allbands)
+            distances <- findKNN(precomputed=pre, k=neighbors, get.index=FALSE)$distance
+            bandwidth <- median(distances[,ncol(distances)])
         }
     } else {
         bandwidth <- as.double(bandwidth)
     }
+
     if (bandwidth <= 0) {
         warning("setting a non-positive bandwidth to a small offset")
         bandwidth <- 1e-8 
     }
 
     # Computing densities with a tricube kernel.
-    densities <- .Call(cxx_compute_density, new.coords, cluster.centers, cluster.info, bandwidth)
+    dist2neighbors <- findNeighbors(precomputed=pre, threshold=bandwidth, get.index=FALSE)$distance
+    densities <- .Call(cxx_compute_density, dist2neighbors, bandwidth)
     w <- 1/densities
-    w[hyper.ids] <- w # Getting back to original ordering.
 
     # Computing a density-weighted q-value.
     o <- order(pvalues)
@@ -74,20 +63,3 @@ spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALS
     }
     return(adjp)
 }
-
-.find_valid_markers <- function(coords, return.matrix=FALSE) {
-    NC <- ncol(coords)
-    to.use <- logical(NC)
-    for (i in seq_len(NC)) {
-        failed <- is.na(coords[,i])
-        if (!any(failed)) {
-            to.use[i] <- TRUE
-        } else if (!all(failed)) {
-            stop("columns should be all NA or with no NA values")
-        }
-    }
-    if (!return.matrix) return(to.use)  
-    if (!all(to.use)) coords <- coords[,to.use,drop=FALSE]
-    return(coords)
-}
-
