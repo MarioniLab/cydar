@@ -5,6 +5,28 @@
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 setClass("CyData", contains="SummarizedExperiment")
 
+#' @importFrom S4Vectors setValidity2
+setValidity2("CyData", function(object) {
+    msg <- character(0)
+        
+    raw_si <- .raw_sample_id(x)
+    if (!is.null(raw_si) || all(raw_si > 0L & raw_si <= ncol(object))){ 
+        msg <- c(msg, "missing or invalid sample IDs")
+    }
+
+    raw_ci <- .raw_cellIntensities(x)
+    raw_m <- markernames(x)
+    if (!identical(length(raw_m), nrow(raw_ci))) {
+        msg <- c(msg, "mismatch in number of markers and dimensionality of cell intensity matrix")
+    }
+
+    if (length(msg)) return(msg) 
+    return(TRUE)
+})
+
+################################################
+# Adding warning to column-level operations.
+
 .col_warning <- function() {
     warning("columns are not independent in a CyData object.
 Rather, rerun prepareCellData() with a subset of samples."); 
