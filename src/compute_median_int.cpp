@@ -1,28 +1,28 @@
 #include "cydar.h"
-#include "packer.h"
 #include "utils.h"
-#include "objects.h"
 
 SEXP compute_median_int(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments) {
     BEGIN_RCPP
 
     // Setting up inputs.
-    const Rcpp::NumericMatrix _exprs(exprs);
-    const size_t& nmarkers=_exprs.nrow();
-    const size_t& ncells=_exprs.ncol();
+    const Rcpp::NumericMatrix Exprs(exprs);
+    const size_t& nmarkers=Exprs.nrow();
+    const size_t& ncells=Exprs.ncol();
 
-    const Rcpp::List _assignments(assignments);
-    const int ngroups=_assignments.size();
+    const Rcpp::List Assignments(assignments);
+    const int ngroups=Assignments.size();
 
     // Checking samples.
     const int nsamples=check_integer_scalar(nsamp, "number of samples");
-    if (nsamples <= 0) { throw std::runtime_error("number of samples must be positive"); }
+    if (nsamples <= 0) { 
+        throw std::runtime_error("number of samples must be positive"); 
+    }
 
-    const Rcpp::IntegerVector _sample_id(sample_id);
-    if (_sample_id.size()!=ncells) { 
+    const Rcpp::IntegerVector Samples(sample_id);
+    if (Samples.size()!=ncells) { 
         throw std::runtime_error("sample IDs should be an integer vector of length equal to the number of cells"); 
     }
-    for (const auto& cursample : _sample_id) { 
+    for (const auto& cursample : Samples) { 
         if (cursample < 0 || cursample >= nsamples) {
             throw std::runtime_error("sample IDs out of range");
         }
@@ -39,8 +39,7 @@ SEXP compute_median_int(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
 
     for (int g=0; g<ngroups; ++g) {
         // Unpacking the assignments.
-        const Rcpp::IntegerVector curass(_assignments[g]);
-        unpack_index_vector(collected, curass.begin(), curass.end());
+        const Rcpp::IntegerVector curass(Assignments[g]);
         for (auto& curdex : collected) {
             --curdex; // Getting to zero-index.
             if (curdex < 0 || curdex >= ncells) {
@@ -50,9 +49,9 @@ SEXP compute_median_int(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
                 
         // Computing the median intensity.
         for (size_t u=0; u<nmarkers; ++u) {
-            auto curexprs=_exprs.row(u);
+            auto curexprs=Exprs.row(u);
             for (const auto& curdex : collected) { 
-                all_intensities[_sample_id[curdex]].push_back(curexprs[curdex]);
+                all_intensities[Samples[curdex]].push_back(curexprs[curdex]);
             }
 
             auto curout=output[u].row(g);

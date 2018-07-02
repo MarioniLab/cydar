@@ -1,30 +1,30 @@
 #include "cydar.h"
-#include "packer.h"
 #include "utils.h"
-#include "objects.h"
 
 SEXP compute_hyperstats(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments) {
     BEGIN_RCPP 
 
     // Setting up inputs.
-    const Rcpp::NumericMatrix _exprs(exprs);
-    const size_t nmarkers=_exprs.nrow();
-    const size_t ncells=_exprs.ncol();
+    const Rcpp::NumericMatrix Exprs(exprs);
+    const size_t nmarkers=Exprs.nrow();
+    const size_t ncells=Exprs.ncol();
 
-    const Rcpp::List _assignments(assignments);
-    const int ngroups=_assignments.size();
+    const Rcpp::List Assignments(assignments);
+    const int ngroups=Assignments.size();
 
     // Checking samples and computing sample weights.
     const int nsamples=check_integer_scalar(nsamp, "number of samples");
-    if (nsamples <= 0) { throw std::runtime_error("number of samples must be positive"); }
+    if (nsamples <= 0) { 
+        throw std::runtime_error("number of samples must be positive"); 
+    }
 
-    const Rcpp::IntegerVector _sample_id(sample_id);
-    if (_sample_id.size()!=ncells) { 
+    const Rcpp::IntegerVector Samples(sample_id);
+    if (Samples.size()!=ncells) { 
         throw std::runtime_error("sample IDs should be an integer vector of length equal to the number of cells"); 
     }
 
     std::vector<double> sample_weights(nsamples);
-    for (const auto& s : _sample_id) {
+    for (const auto& s : Samples) {
         if (s < 0 || s >= nsamples) {
             throw std::runtime_error("sample IDs out of range");
         }
@@ -42,15 +42,14 @@ SEXP compute_hyperstats(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
     std::deque<int> collected;
 
     for (int g=0; g<ngroups; ++g) {
-        const Rcpp::IntegerVector curass=_assignments[g];
-        unpack_index_vector(collected, curass.begin(), curass.end());
+        const Rcpp::IntegerVector curass=Assignments[g];
         for (size_t icx=0; icx<collected.size(); ++icx) { --(collected[icx]); } // Getting to 1-based indexing.
             
         // Computing counts and total weights.
         auto curcounts=outcounts.row(g);
         double total_weight=0;
         for (const auto& c : collected) { 
-            const int& cursample=_sample_id[c];
+            const int& cursample=Samples[c];
             ++(curcounts[cursample]);
             total_weight+=sample_weights[cursample];
         }
@@ -59,11 +58,11 @@ SEXP compute_hyperstats(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
         intensities.resize(collected.size());
         auto curcoords=outcoords.row(g);
         for (size_t mi=0; mi<nmarkers; ++mi) {
-            auto curexprs=_exprs.row(mi);
+            auto curexprs=Exprs.row(mi);
             for (size_t icx=0; icx<collected.size(); ++icx) {
                 const int& curneighbor=collected[icx];
                 intensities[icx].first=curexprs[curneighbor];
-                intensities[icx].second=_sample_id[curneighbor];
+                intensities[icx].second=Samples[curneighbor];
             }
 
             std::sort(intensities.begin(), intensities.end());

@@ -1,46 +1,30 @@
-#include "objects.h"
+#include "cydar.h"
 
-SEXP drop_redundant (SEXP actual_order, SEXP coords, SEXP centers, SEXP clust_info, SEXP threshold) {
+SEXP drop_redundant (SEXP center_id, SEXP assignments) {
     BEGIN_RCPP
 
-    const Rcpp::NumericMatrix _coords(coords);
-    auto searcher=generate_holder(coords, centers, clust_info);
-    const size_t nhyper=searcher->get_ncells();
-    const size_t nmarkers=searcher->get_nmarkers();
+    const Rcpp::List Assignments(assignments);
+    const int ngroups=Assignments.size();
 
-    const double thresh=check_numeric_scalar(threshold, "threshold");
-    const double radius=thresh * std::sqrt(nmarkers);
-
-    const Rcpp::IntegerVector ordering(actual_order);
-    if (ordering.size()!=nhyper) {
-        throw std::runtime_error("length of actual_order order vector must be equal to number of hyperspheres");
+    const Rcpp::IntegerVector center_cell(center_id);
+    if (center_cell.size()!=ngroups) {
+        throw std::runtime_error("length of 'center_id' is not equal to the number of groups");
     }
-    
+
     // Looking for hypersphers that are not redundant to hyperspheres with lower p-values.
-    Rcpp::LogicalVector output(nhyper);
-    std::deque<bool> already_seen(nhyper, false);
+    Rcpp::LogicalVector output(ngroups);
+    std::deque<bool> already_seen(ngroups, false);
 
-    for (const auto& actual_index : ordering) { 
-        if (already_seen[actual_index]) { continue; }
-        output[actual_index]=1;
+    for (size_t i=0; i<ngroups; ++i) {
+        const int idx=center_cell[i] - 1;
+        if (already_seen[idx]) { 
+            continue; 
+        }
+        output[idx]=1;
 
-        searcher->find_neighbors(actual_index, radius, false);
-        const std::deque<size_t>& neighbors=searcher->get_neighbors();
-        auto curcoords=_coords.column(actual_index);
-
+        const Rcpp::IntegerVector neighbors=Assignments[i];
         for (const auto& neigh : neighbors) { 
-            bool okay=false;
-            auto othercoords=_coords.column(neigh);
-
-            for (size_t mi=0; mi<nmarkers; ++mi) {
-                if (std::abs(curcoords[mi] - othercoords[mi]) > thresh) {
-                    okay=true;
-                    break;
-                }
-            }
-            if (!okay) { 
-                already_seen[neigh] = true;
-            }
+            already_seen[neigh-1] = true;
         }
     }
 

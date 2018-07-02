@@ -1,19 +1,16 @@
-#include "objects.h"
+#include "cydar.h"
+#include "utils.h"
 
-SEXP compute_density (SEXP coords, SEXP centers, SEXP clust_info, SEXP radius) {
+SEXP compute_density (SEXP distances, SEXP radius) {
     BEGIN_RCPP
-
     const double rad=check_numeric_scalar(radius, "radius");
-    auto searcher=generate_holder(coords, centers, clust_info);
-    const size_t nhyper=searcher->get_ncells();
+    Rcpp::List Distances(distances);
+    Rcpp::NumericVector output(Distances.size());
 
-    Rcpp::NumericVector output(nhyper);
-    for (size_t h=0; h<nhyper; ++h) {
-        searcher->find_neighbors(h, rad, true);
-        const std::deque<double>& distances=searcher->get_distances();
-
-        double& curdensity=(output[h]=0);
-        for (const auto& d : distances) { 
+    for (size_t i=0; i<Distances.size(); ++i) {
+        Rcpp::NumericVector current_distances=Distances[i];
+        double& curdensity=(output[i]=0);
+        for (const auto& d : current_distances) { 
             const double ratio=d/rad;
             const double diffdist = 1 - ratio*ratio*ratio;
             curdensity += diffdist * diffdist * diffdist; // tricube weights.
