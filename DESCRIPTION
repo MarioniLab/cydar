@@ -20,3 +20,4 @@ NeedsCompilation: yes
 VignetteBuilder: knitr
 LinkingTo: Rcpp
 SystemRequirements: C++11
+RoxygenNote: 6.0.1
