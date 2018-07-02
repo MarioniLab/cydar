@@ -9,19 +9,19 @@ setClass("CyData", contains="SummarizedExperiment")
 setValidity2("CyData", function(object) {
     msg <- character(0)
         
-    raw_sid <- .raw_sample_id(x)
-    if (!is.null(raw_sid) || all(raw_sid > 0L & raw_sid <= ncol(object))){ 
+    raw_sid <- .raw_sample_id(object)
+    if (is.null(raw_sid) || !all(raw_sid > 0L & raw_sid <= ncol(object))){ 
         msg <- c(msg, "missing or invalid sample IDs")
     }
 
-    raw_cin <- .raw_cellIntensities(x)
-    raw_markers <- markernames(x)
+    raw_cin <- .raw_cellIntensities(object)
+    raw_markers <- markernames(object)
     if (!identical(length(raw_markers), nrow(raw_cin))) {
         msg <- c(msg, "mismatch in number of markers and dimensionality of cell intensity matrix")
     }
 
-    raw_cid <- .raw_sample_id(x)
-    if (!is.null(raw_cid) || all(raw_cid > 0L & raw_cid <= ncol(raw_cin))){ 
+    raw_cid <- .raw_sample_id(object)
+    if (is.null(raw_cid) || !all(raw_cid > 0L & raw_cid <= ncol(raw_cin))){ 
         msg <- c(msg, "missing or invalid cell IDs")
     }
 
