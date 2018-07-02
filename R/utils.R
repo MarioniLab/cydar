@@ -1,31 +1,24 @@
-.check_cell_data <- function(x, check.clusters=TRUE) 
+#' @importFrom flowCore markernames
+.check_cell_data <- function(x) 
 # Checks incoming cell data, that it was properly processed by prepareCellData.
 {
-    sample.id <- cellData(x)$sample.id
-    stopifnot(all(sample.id > 0L & sample.id <= ncol(x)))
-
-    central.id <- rowData(x)$center.cell
-    if (!is.null(central.id)) { 
-        stopifnot(all(central.id > 0L & central.id <= ncells(x)))
+    raw_int <- .raw_intensities(x)
+    if (is.null(raw_int) || !is.matrix(raw_int) || !is.numeric(raw_int)) {
+        stop("'intensities' should be a numeric matrix, run 'countCells()'")
     }
 
-    if (check.clusters) {
-        cluster.centers <- metadata(x)$cluster.centers        
-        if (is.null(cluster.centers)) {
-            stop("'cluster.centers' must be defined for non-naive counting")
-        }
-        stopifnot(nrow(cluster.centers)==sum(markerData(x)$used))
-        
-        cluster.info <- metadata(x)$cluster.info
-        if (is.null(cluster.info)) {
-            stop("'cluster.info' must be defined for non-naive counting")
-        }
-        
-        stopifnot(ncol(cluster.centers)==length(cluster.info))
-        for (clust in cluster.info) {
-            stopifnot(!is.unsorted(clust[[2]]))
-            stopifnot(clust[[1]] >= 0L & clust[[1]]+length(clust[[2]]) <= ncells(x))
-        }
+    if (ncol(raw_int)!=length(markernames(x))) {
+        stop("dimensionality of intensity matrix is not equal to number of markers")
+    }
+
+    raw_ca <- .raw_cellAssignments(x)
+    if (is.null(raw_ca) || !is.list(raw_ca)) {
+        stop("'cellAssignments' should be a list, please run 'countCells()'")
+    }
+
+    raw_cc <- .raw_center_cell(x)
+    if (is.null(raw_cc)) {
+        stop("missing 'center.cell' in 'rowData(x)', please run 'countCells()'")        
     }
 
     invisible(NULL)
@@ -47,15 +40,14 @@
         used <- rep(TRUE, length(all.markers))
     }
     return(used)
-}
+} 
 
-.get_used_intensities <- function(x, used) 
-# Getting the intensities that were used from the CyData object.
+.downsample <- function(x, downsample) 
+# This determines which points should be used upon downsampling.
+# Note that downsampling is done _within_ each batch, hence the use of 'cell.id' via .raw_cell_index().
+# We then have to use 'ordering' as 'i' is relative to the reordered indices, and we need it on the merged indices.
 {
-    ci <- cellIntensities(x)
-    if (!all(used)) {
-        ci <- ci[used,,drop=FALSE]
-    }
-    return(ci)
+    ordering <- .raw_precomputed(x)$order
+    i <- ((.raw_cell_index(x)[ordering] - 1L) %% as.integer(downsample))==0L
+    ordering[i]
 }
-    
