@@ -1,10 +1,11 @@
+#' @export
+#' @importFrom graphics plot lines points hist
 multiIntHist <- function(collected, cols=NULL, xlab="Intensity", ylab="Density", lwd=2, lty=1, pch=16, cex=2, ...) 
 # This plots multiple intensity distributions as histogram outlines on a single plot.
 # The density at zero is also shown in points at zero.
 #
 # written by Aaron Lun
 # created 30 January 2017   
-# last modified 21 March 2017 
 {   
     if (is.null(cols)) { 
         cols <- rainbow(length(collected))
