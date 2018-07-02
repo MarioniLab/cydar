@@ -14,16 +14,15 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     distance <- tol * sqrt(length(all.markers)) 
     if (distance <= 0) {
         warning("setting a non-positive distance to a small offset")
-        distance <- 1e-8        
+        distance <- 1e-8
     }
     
     # Only collating hyperspheres around every '10th' cell, for speed.
     pre <- .raw_precomputed(x)
-    downsample <- as.integer(downsample)
-    chosen <- ((pre$order - 1L) %% downsample) == 0L
+    chosen <- .downsample(x, downsample)
 
     ci <- findNeighbors(precomputed=pre, threshold=distance, BPPARAM=BPPARAM, 
-        raw.index=TRUE, subset=pre$order[chosen], get.distance=FALSE)$index
+        raw.index=TRUE, subset=chosen, get.distance=FALSE)$index
     
     # Computing the associated statistics.
     sample.id <- .raw_sample_id(x)
@@ -38,6 +37,6 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     output$totals <- tabulate(sample.id, ncol(x))
 
     metadata(output)$cydar$tol <- tol
-    metadata(output)$cydar$center.cell <- chosen # relative to the raw indices.
+    rowData(output)$center.cell <- match(chosen, pre$order) # relative to the rearranged indices, not the original order!
     return(output)
 }

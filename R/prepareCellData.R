@@ -14,6 +14,7 @@ prepareCellData <- function(x, markers=NULL, ...)
 
     exprs <- do.call(rbind, exprs.list)
     sample.id <- rep(seq_along(exprs.list), sapply(exprs.list, nrow))
+    cell.id <- unlist(lapply(exprs.list, FUN=function(exprs) seq_len(ncol(exprs)) ))
 
     # Picking markers to use.
     used <- .chosen_markers(markers, marker.names)
@@ -25,7 +26,8 @@ prepareCellData <- function(x, markers=NULL, ...)
     metadata(output)$cydar <- list(
         precomputed=reorg,
         markers=marker.names[used],
-        sample.id=sample.id[reorg$order]
+        sample.id=sample.id[reorg$order],
+        sample.id=cell.id[reorg$order]
     )
     output
 }
