@@ -9,7 +9,6 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
 #
 # written by Aaron Lun
 # created 21 April 2016
-# last modified 24 May 2017
 {
     all.markers <- markernames(x)
     distance <- tol * sqrt(length(all.markers)) 
@@ -21,10 +20,10 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     # Only collating hyperspheres around every '10th' cell, for speed.
     pre <- .raw_precomputed(x)
     downsample <- as.integer(downsample)
-    chosen <- which(((pre$order - 1L) %% downsample) == 0L)
+    chosen <- ((pre$order - 1L) %% downsample) == 0L
 
     ci <- findNeighbors(precomputed=pre, threshold=distance, BPPARAM=BPPARAM, 
-        raw.index=TRUE, subset=chosen, get.distance=FALSE)$index
+        raw.index=TRUE, subset=pre$order[chosen], get.distance=FALSE)$index
     
     # Computing the associated statistics.
     sample.id <- .raw_sample_id(x)
@@ -37,6 +36,8 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     intensities(output) <- out.coords
     cellAssignments(output) <- ci
     output$totals <- tabulate(sample.id, ncol(x))
+
     metadata(output)$cydar$tol <- tol
+    metadata(output)$cydar$center.cell <- chosen # relative to the raw indices.
     return(output)
 }

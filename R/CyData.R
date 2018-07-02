@@ -65,6 +65,9 @@ setMethod("show", signature("CyData"), function(object) {
 #' @importFrom S4Vectors metadata
 .raw_sample_id <- function(x) metadata(x)$cydar$sample.id
 
+#' @importFrom S4Vectors metadata
+.raw_center_cell <- function(x) metadata(x)$cydar$center.cell
+
 #' @importFrom SummarizedExperiment rowData
 .raw_cellAssignments <- function(x) rowData(x)$cellAssignments
 
