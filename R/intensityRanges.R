@@ -7,7 +7,6 @@ intensityRanges <- function(x, p=0.01)
 # written by Aaron Lun
 # created 22 April 2016
 {
-    .check_cell_data(x, check.clusters=FALSE)
     marker.names <- markernames(x)
     ci <- .raw_cellIntensities(x)
     all.ranges <- vector("list", length(marker.names))

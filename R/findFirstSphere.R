@@ -24,6 +24,7 @@ findFirstSphere <- function(x, pvalues, threshold=1, block=NULL, naive=FALSE)
     }
 
     # Checking for non-redundancy.
+    .check_cell_data(x)
     .Call(cxx_drop_redundant, order(pvalues) - 1L, .raw_center_cell(x), cellAssignments(x))
 }
 

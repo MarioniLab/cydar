@@ -8,7 +8,7 @@ pickBestMarkers <- function(x, chosen, markers=NULL, downsample=10, p=0.05, naiv
 # created 10 June 2016
 # last modified 29 November 2016
 {
-    .check_cell_data(x, check.clusters=FALSE)
+    .check_cell_data(x)
     if (is.null(markers)) markers <- markerData(x)$used
     used <- .chosen_markers(markers, markernames(x))
 

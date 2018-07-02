@@ -8,8 +8,7 @@ medIntensities <- function(x)
 # written by Aaron Lun
 # created 2 December 2016
 {
-    .check_cell_data(x, check.clusters=FALSE)
-
+    .check_cell_data(x)
     sample.id <- cellData(x)$sample.id - 1L # Get to zero indexing.
     ci <- .raw_cellIntensities(x)
     out <- .Call(cxx_compute_median_int, ci, ncol(x), sample.id, .raw_cellAssignments(x))
