@@ -18,7 +18,7 @@ SEXP compute_density(SEXP, SEXP);
 
 SEXP compute_hyperstats(SEXP, SEXP, SEXP, SEXP);
 
-SEXP drop_redundant(SEXP, SEXP);
+SEXP drop_redundant(SEXP, SEXP, SEXP);
 
 SEXP compute_median_int(SEXP, SEXP, SEXP, SEXP);
 

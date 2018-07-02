@@ -1,6 +1,6 @@
 #include "cydar.h"
 
-SEXP drop_redundant (SEXP center_id, SEXP assignments) {
+SEXP drop_redundant (SEXP ordering, SEXP center_id, SEXP assignments) {
     BEGIN_RCPP
 
     const Rcpp::List Assignments(assignments);
@@ -11,18 +11,22 @@ SEXP drop_redundant (SEXP center_id, SEXP assignments) {
         throw std::runtime_error("length of 'center_id' is not equal to the number of groups");
     }
 
+    const Rcpp::IntegerVector Ordering(ordering);
+    if (Ordering.size()!=ngroups) {
+        throw std::runtime_error("length of 'ordering' is not equal to the number of groups");
+    }
+
     // Looking for hypersphers that are not redundant to hyperspheres with lower p-values.
     Rcpp::LogicalVector output(ngroups);
     std::deque<bool> already_seen(ngroups, false);
 
-    for (size_t i=0; i<ngroups; ++i) {
-        const int idx=center_cell[i] - 1;
-        if (already_seen[idx]) { 
+    for (auto o : Ordering) {
+        if (already_seen[center_cell[o]-1]) { 
             continue; 
         }
-        output[idx]=1;
+        output[o]=1; // yes, 'o' is deliberate here; we're referring to the index of 'assignments'.
 
-        const Rcpp::IntegerVector neighbors=Assignments[i];
+        const Rcpp::IntegerVector neighbors=Assignments[o];
         for (const auto& neigh : neighbors) { 
             already_seen[neigh-1] = true;
         }
