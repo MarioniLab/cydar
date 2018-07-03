@@ -1,25 +1,10 @@
-#####################################################
-# This tests the count machinery, to make sure the counts are right.
+# This tests the countCells functions.
+# library(cydar); library(testthat); source("test-counts.R")
 
-require(cydar); require(testthat)
-
-set.seed(100)
-for (setup in 1:5) {
-    # Running our function.
+set.seed(10000)
+test_that("countCells computes all hypersphere values correctly", {
     nmarkers <- 10
-    downsample <- 10L
     tol <- 0.5
-    filter <- 1L
-    if (setup==2L) {
-        nmarkers <- 5L
-    } else if (setup==3L) {
-        downsample <- 3L
-    } else if (setup==4L) {
-        tol <- 1L
-    } else if (setup==5L) {
-        tol <- 1L
-        filter <- 5L
-    }
 
     # Setup.
     ncells1 <- 1001
@@ -33,93 +18,135 @@ for (setup in 1:5) {
 
     # Counting with specified parameters.
     suppressWarnings(cd <- prepareCellData(fs))
-    out <- countCells(cd, filter=filter, downsample=downsample, tol=tol)
-    out2 <- countCells(cd, filter=filter, downsample=downsample, tol=tol, naive=TRUE)
-    expect_equal(out, out2)
+    cn <- countCells(cd, filter=0L, downsample=1L, tol=tol)
 
-    # Reference counter.
-    to.select1 <- seq_len(nrow(all.values1)) %% downsample == 1L
-    to.select2 <- seq_len(nrow(all.values2)) %% downsample == 1L
-    to.select <- c(to.select1, to.select2)
-    combined <- rbind(all.values1, all.values2)
-    origin <- rep(1:2, c(nrow(all.values1), nrow(all.values2)))
-    cell.id <- c(seq_len(nrow(all.values1)), seq_len(nrow(all.values2)))
-    new.dist <- tol * sqrt(nmarkers)
+    tmp <- metadata(cn)$cydar
+    expect_equal(tmp$tol, tol)
+    tmp$tol <- NULL
+    expect_identical(tmp, metadata(cd)$cydar)
 
-    collected.counts <- list()
+    # Checking that the center choices are correct.
+    sid <- metadata(cn)$cydar$sample.id[rowData(cn)$center.cell]
+    expect_identical(sid, rep(1:2, c(ncells1, ncells2)))
+    cid <- metadata(cn)$cydar$cell.id[rowData(cn)$center.cell]
+    expect_identical(unname(cid), c(seq_len(ncells1), seq_len(ncells2)))
+
+    # Checking that the cell IDs are correct.
+    total <- rbind(all.values1, all.values2)
+    threshold <- tol * sqrt(nmarkers)
+
+    ref <- kmknn::findNeighbors(X=total, threshold=threshold, get.distance=FALSE)$index
+    ref <- lapply(ref, sort)
+    preorder <- metadata(cn)$cydar$precomputed$order
+    obs <- lapply(cellAssignments(cn), FUN=function(i) { sort(preorder[i]) })
+    expect_identical(ref, obs)
+
+    # Checking that the counts are correct.
+    collected <- matrix(0L, nrow(cn), ncol(cn))
+    for (r in seq_along(cellAssignments(cn))) { 
+        cell.indices <- cellAssignments(cn)[[r]]
+        collected[r,] <- tabulate(metadata(cn)$cydar$sample.id[cell.indices], nbin=2)
+    }
+    expect_identical(collected, assay(cn, withDimnames=FALSE))
+
+    # Checking the median per hypersphere.
     collected.meds.upper <- collected.meds.lower <- list()
     index <- 1L
-    for (i in which(to.select)) { 
-        curdist <- sqrt(colSums((t(combined) - combined[i,])^2))
-        inrange <- curdist <= new.dist
-        cursamples <- origin[inrange]
-        collected.counts[[index]] <- tabulate(cursamples, nbins=length(fs))
+    for (i in seq_along(ref)) { 
+        cell.indices <- ref[[i]]
+        combined <- total[cell.indices,,drop=FALSE]
+        w <- 1/c(ncells1, ncells2)[as.integer(cell.indices > ncells1) + 1L]
 
         # Need to calculate lower/upper bounds for the median, as numerical imprecision has big effects.
-        cur.meds <- apply(combined, 2, 
-                          FUN=function(x) { 
-                              x <- x[inrange]
-                              w <- 1/c(ncells1, ncells2)[origin[inrange]]
-                              o <- order(x)
-                              x <- x[o]
-                              w <- w[o]
-                              p <- cumsum(w)/sum(w)
-                              x[c(sum(p < 0.499999), sum(p < 0.500001))+1]
-                          })
+        cur.meds <- apply(combined, 2, FUN=function(x) { 
+            o <- order(x)
+            x <- x[o]
+            w <- w[o]
+            p <- cumsum(w)/sum(w)
+            x[c(sum(p < 0.499999), sum(p < 0.500001))+1]
+        })
         collected.meds.lower[[index]] <- cur.meds[1,]
         collected.meds.upper[[index]] <- cur.meds[2,]
-
         index <- index + 1L
     }
-    collected.counts <- do.call(rbind, collected.counts)
-    keep <- rowSums(collected.counts) >= filter
-    
-    # Comparison.
-    obs <- assay(out)
-    dimnames(obs) <- NULL
-    expect_identical(collected.counts[keep,,drop=FALSE], obs)
-    expect_identical(rowData(out)$center.cell, match(c(paste0("1.", which(to.select1)), paste0("2.", which(to.select2)))[keep],
-        paste0(cellData(cd)$sample.id, ".", cellData(cd)$cell.id)))
 
-    med.coords <- intensities(out)
-    collected.meds.lower <- do.call(rbind, collected.meds.lower)[keep,,drop=FALSE]
-    collected.meds.upper <- do.call(rbind, collected.meds.upper)[keep,,drop=FALSE]
+    med.coords <- intensities(cn)
+    collected.meds.lower <- do.call(rbind, collected.meds.lower)
+    collected.meds.upper <- do.call(rbind, collected.meds.upper)
     expect_identical(dim(collected.meds.lower), dim(med.coords))
     expect_identical(dim(collected.meds.upper), dim(med.coords))
     out.of.range <- collected.meds.lower > med.coords | collected.meds.upper < med.coords
     expect_true(!any(out.of.range))
+})
 
-    expect_equal(tol, metadata(out)$tol)
-    expect_equal(c(ncells1, ncells2), out$totals)
+set.seed(10001)
+test_that("countCells responds to other parameter settings", {
+    nmarkers <- 10
+    tol <- 0.5
 
-    # Checking the consistency of the compressed vectors with the counts.
-    for (r in seq_along(cellAssignments(out))) { 
-        cell.indices <- unpackIndices(cellAssignments(out)[r])
-        expect_equivalent(assay(out)[r,], tabulate(cellData(out)$sample.id[cell.indices[[1]]], nbin=2))
-        expect_identical(packIndices(cell.indices), cellAssignments(out)[r])
-    }
+    # Setup.
+    ncells1 <- 3201
+    all.values1 <- matrix(rnorm(ncells1*nmarkers, sd=1), nrow=ncells1, ncol=nmarkers)
+    colnames(all.values1) <- paste0("X", seq_len(nmarkers))
+    
+    ncells2 <- 1201
+    all.values2 <- matrix(rnorm(ncells2*nmarkers, sd=1), nrow=ncells2, ncol=nmarkers)
+    colnames(all.values2) <- colnames(all.values1)
+    fs <- list(A=all.values1, B=all.values2)
 
-    # Checking the consistency of the counts if only a subset of markers are used.
-    chosen.markers <- c(2, 3, 4)
-    fs.sub <- fs
-    for (f in seq_along(fs.sub)) { fs.sub[[f]] <- fs.sub[[f]][,chosen.markers,drop=FALSE] }
-    suppressWarnings(cd.sub <- prepareCellData(fs.sub))
-    out.sub <- countCells(cd.sub, filter=filter, downsample=downsample, tol=tol)
-    suppressWarnings(cd.sub.2 <- prepareCellData(fs, markers=chosen.markers))
-    out.sub.2 <- countCells(cd.sub.2, filter=filter, downsample=downsample, tol=tol)
-    expect_identical(assay(out.sub), assay(out.sub.2))
-    for (r in seq_along(cellAssignments(out.sub))) {
-        ix1 <- cellData(out.sub)[unpackIndices(cellAssignments(out.sub)[r])[[1]],]
-        ix2 <- cellData(out.sub.2)[unpackIndices(cellAssignments(out.sub.2)[r])[[1]],]
-        ix1 <- ix1[order(ix1$sample.id, ix1$cell.id),]
-        ix2 <- ix2[order(ix2$sample.id, ix2$cell.id),]
-        expect_identical(ix1, ix2)
-    }
-}
+    # Counting with specified parameters.
+    suppressWarnings(cd <- prepareCellData(fs))
+    cn <- countCells(cd, filter=0L, downsample=1L, tol=tol)
 
-# Running silly settings.
-suppressWarnings(out <- countCells(cd, filter=1L, tol=0))
-expect_true(all(rowSums(assay(out))==1L))
-out <- countCells(cd, filter=Inf)
-expect_identical(nrow(out), 0L)
+    # Responds to filtering.
+    cn2 <- countCells(cd, filter=2L, downsample=1L, tol=tol)
+    expect_equal(cn2, cn[rowSums(assay(cn))>=2L,])
+    cn5 <- countCells(cd, filter=5L, downsample=1L, tol=tol)
+    expect_equal(cn5, cn[rowSums(assay(cn))>=5L,])
 
+    # Handles further downsampling.
+    cn3 <- countCells(cd, filter=0L, downsample=3L, tol=tol)
+    cid <- metadata(cn)$cydar$cell.id[rowData(cn)$center.cell]
+    expect_equal(cn3, cn[cid %% 3L == 1L,])
+
+    cn10 <- countCells(cd, filter=0L, downsample=10L, tol=tol)
+    cid <- metadata(cn)$cydar$cell.id[rowData(cn)$center.cell]
+    expect_equal(cn10, cn[cid %% 10L == 1L,])
+
+    cn16 <- countCells(cd, filter=0L, downsample=16L, tol=tol)
+    cid <- metadata(cn)$cydar$cell.id[rowData(cn)$center.cell]
+    expect_equal(cn16, cn[cid %% 16L == 1L,])
+
+    # Handles parallelization.
+    cn.p <- countCells(cd, filter=0L, downsample=1L, tol=tol, BPPARAM=MulticoreParam(2))
+    expect_equal(cn, cn.p)
+    cn.p <- countCells(cd, filter=0L, downsample=1L, tol=tol, BPPARAM=SnowParam(3))
+    expect_equal(cn, cn.p)
+})
+
+test_that("countCells behaves correctly with silly inputs", { 
+    nmarkers <- 10
+    tol <- 0.5
+
+    # Setup.
+    ncells1 <- 57
+    all.values1 <- matrix(rnorm(ncells1*nmarkers, sd=1), nrow=ncells1, ncol=nmarkers)
+    colnames(all.values1) <- paste0("X", seq_len(nmarkers))
+    
+    ncells2 <- 731
+    all.values2 <- matrix(rnorm(ncells2*nmarkers, sd=1), nrow=ncells2, ncol=nmarkers)
+    colnames(all.values2) <- colnames(all.values1)
+    fs <- list(A=all.values1, B=all.values2)
+
+    suppressWarnings(cd <- prepareCellData(fs))
+
+    # Testing nonsensical inputs.
+    suppressWarnings(out <- countCells(cd, filter=1L, tol=0))
+    expect_true(all(rowSums(assay(out))==1L))
+    out <- countCells(cd, filter=Inf)
+    expect_identical(nrow(out), 0L)
+
+    suppressWarnings(empty <- prepareCellData(lapply(fs, "[", i=0,, drop=FALSE)))
+    out <- countCells(empty)
+    expect_identical(nrow(out), 0L)
+})
