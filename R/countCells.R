@@ -22,7 +22,12 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     chosen <- .downsample(x, downsample)
     ci <- findNeighbors(precomputed=pre, threshold=distance, BPPARAM=BPPARAM, 
         raw.index=TRUE, subset=chosen, get.distance=FALSE)$index
-    
+
+    # Filtering out low-abundance hyperspheres to avoid creating large matrices.
+    keep <- lengths(ci) >= filter
+    ci <- ci[keep]
+    chosen <- chosen[keep]
+        
     # Computing the associated statistics.
     sample.id <- .raw_sample_id(x)
     out.stats <- .Call(cxx_compute_hyperstats, pre$data, ncol(x), sample.id - 1L, ci)
