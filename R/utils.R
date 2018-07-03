@@ -55,5 +55,5 @@
 # However, findKNN() and friends require the indices of the matrix before reordering; hence the use of (ii).
 {
     i <- ((.raw_cell_id(x) - 1L) %% as.integer(downsample))==0L
-    .raw_precomputed(x)$order[i]
+    which(i)
 }

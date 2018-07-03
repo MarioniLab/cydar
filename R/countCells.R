@@ -20,7 +20,6 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     # Only collating hyperspheres around every '10th' cell, for speed.
     pre <- .raw_precomputed(x)
     chosen <- .downsample(x, downsample)
-
     ci <- findNeighbors(precomputed=pre, threshold=distance, BPPARAM=BPPARAM, 
         raw.index=TRUE, subset=chosen, get.distance=FALSE)$index
     
@@ -37,6 +36,9 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     output$totals <- tabulate(sample.id, ncol(x))
 
     metadata(output)$cydar$tol <- tol
-    rowData(output)$center.cell <- match(chosen, pre$order) # relative to the rearranged indices, not the original order!
+    rowData(output)$center.cell <- chosen
+
+    # Reordering for various historical reasons.
+    output <- output[order(sample.id[chosen], .raw_cell_id(output)[chosen]),]
     return(output)
 }
