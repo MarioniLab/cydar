@@ -37,30 +37,28 @@ SEXP compute_hyperstats(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
     // Setting up output vectors. 
     Rcpp::IntegerMatrix outcounts(ngroups, nsamples);
     Rcpp::NumericMatrix outcoords(ngroups, nmarkers);
-
     std::deque<std::pair<double, int> > intensities;
-    std::deque<int> collected;
 
     for (int g=0; g<ngroups; ++g) {
         const Rcpp::IntegerVector curass=Assignments[g];
-        for (size_t icx=0; icx<collected.size(); ++icx) { --(collected[icx]); } // Getting to 1-based indexing.
             
         // Computing counts and total weights.
         auto curcounts=outcounts.row(g);
         double total_weight=0;
-        for (const auto& c : collected) { 
-            const int& cursample=Samples[c];
+        for (const auto& c : curass) { 
+            const int& cursample=Samples[c-1];
             ++(curcounts[cursample]);
             total_weight+=sample_weights[cursample];
         }
 
         // Setting the weighted medians (to avoid large samples from dominating the location).
-        intensities.resize(collected.size());
+        intensities.resize(curass.size());
         auto curcoords=outcoords.row(g);
         for (size_t mi=0; mi<nmarkers; ++mi) {
             auto curexprs=Exprs.row(mi);
-            for (size_t icx=0; icx<collected.size(); ++icx) {
-                const int& curneighbor=collected[icx];
+
+            for (size_t icx=0; icx<curass.size(); ++icx) {
+                const int curneighbor=curass[icx]-1;
                 intensities[icx].first=curexprs[curneighbor];
                 intensities[icx].second=Samples[curneighbor];
             }
