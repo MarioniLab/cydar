@@ -8,7 +8,7 @@ Count the number of cells from each sample lying inside hyperspheres in high-dim
 }
 
 \usage{
-countCells(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10, naive=FALSE)
+countCells(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10)
 }
 
 \arguments{
@@ -17,7 +17,6 @@ countCells(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10, naive=FA
 \item{BPPARAM}{A BiocParallelParam object specifying how parallelization is to be performed.}
 \item{downsample}{An integer scalar specifying the frequency with which cells are sampled to form hyperspheres.}
 \item{filter}{An integer scalar specifying the minimum count sum required to report a hypersphere.} 
-\item{naive}{A logical scalar specifying whether a naive counting approach should be used.}
 }
 
 \details{
@@ -45,15 +44,6 @@ All hyperspheres with count sums below \code{filter} are removed by default.
 Such hyperspheres do not have enough counts (and thus, information) for downstream analyses.
 Removing them reduces the amount of memory required to form the output matrix.
 
-The default setting of \code{naive=FALSE} will use a method similar to that described by Samusik et al. (2016) to speed up the search.
-Here, the distance between the hypersphere and cluster centers is first computed to decide which, if any, cells in the cluster should be considered for counting.
-If \code{naive=TRUE}, a slower naive approach will be used where distances are computed between all pairs of cells.
-This is generally only useful for testing.
-
-If \code{markerData(x)$used} is not all \code{TRUE}, only the specified markers will be used in the distance calculations.
-Median coordinates will not be calculated for any discarded markers, instead being reported as \code{NA} in the utput \code{intensities}.
-Note that the \code{used} field should not be set directly -- \code{\link{prepareCellData}} must be run again to change the set of used markers.
-
 Users can also increase speed by setting \code{BPPARAM} to use multiple cores.
 Neither this or \code{naive} will not affect the final results, only the speed with which they are obtained.
 }
@@ -61,18 +51,15 @@ Neither this or \code{naive} will not affect the final results, only the speed w
 \value{
 A CyData object containing the following information:
 \describe{
-\item{\code{counts}}{An integer matrix of counts for each hypersphere (row) and sample (column) in the \code{Assays} slot.}
-\item{\code{intensities}:}{A numeric matrix of median intensities for each hypersphere (row) and marker (column), stored in the \code{intensities} slot.}
-\item{\code{cellAssignments}:}{A list of integer vectors specifying the cells belonging in each group.
-This is stored in a compressed format, see \code{\link{packIndices}} for details.}
-\item{\code{sample.id}:}{An integer vector containing an integer ID for each sample.
-This corresponds to values in \code{cellData(x)$sample.id}, to ensure that they can be properly interpreted regardless of column subsetting or combining.}
+\item{\code{counts}}{An integer matrix of counts for each hypersphere (row) and sample (column) in the \code{assays} slot.}
+\item{\code{intensities}:}{A numeric matrix of median intensities for each hypersphere (row) and marker (column), stored in the \code{rowData} slot.}
+\item{\code{cellAssignments}:}{A list of integer vectors specifying the cells contained within each hypersphere, stored in the \code{rowData} slot.}
 \item{\code{totals}:}{An integer vector specifying the total number of cells in each sample, stored as a field in the \code{colData} slot.}
+\item{\code{center.cell}:}{An integer vector specifying the cell that is used as the centre of each hypersphere, stored as a field in the \code{rowData} slot.}
 \item{\code{tol}:}{An integer scalar equal to \code{tol}, stored in the \code{metadata} slot.}
-\item{\code{center.cell}:}{An integer vector specifying the column of \code{cellIntensities} containing the centre of each hypersphere, stored as a field in the \code{rowData} slot.}
 }
-Any existing \code{rowData}, \code{intensities} and \code{assays} are discarded.
-All other slots are left unchanged from the values supplied in \code{x}.
+Any existing \code{rowData}, \code{colData} and \code{assays} are discarded.
+All other slots (i.e., the \code{metadata}) are left unchanged from the values supplied in \code{x}.
 }
 
 \author{
@@ -80,6 +67,10 @@ Aaron Lun
 }
 
 \references{
+Lun ATL, Richard AC, Marioni JC (2017). 
+Testing for differential abundance in mass cytometry data. 
+\emph{Nat. Methods}, 14, 7:707-709.
+
 Samusik N, Good Z, Spitzer MH et al. (2016).
 Automated mapping of phenotype space with single-cell data.
 \emph{Nat. Methods} 13:493-496

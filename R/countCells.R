@@ -3,7 +3,7 @@
 #' @importFrom BiocParallel SerialParam
 #' @importFrom SummarizedExperiment colData
 #' @importFrom S4Vectors metadata
-countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10, naive=FALSE)
+countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10)
 # Extracts counts for each cell in a CyTOF experiment, based on the number of surrounding cells 
 # from each sample, given a prepared set of expression values for all cells in each sample.
 #
