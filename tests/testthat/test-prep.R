@@ -5,15 +5,14 @@ set.seed(90001)
 test_that("prepareCellData works as expected", {
     # Setup.
     nmarkers <- 10
-    
     ncells1 <- 1001
     all.values1 <- matrix(rnorm(ncells1*nmarkers, sd=1), nrow=ncells1, ncol=nmarkers)
     colnames(all.values1) <- paste0("X", seq_len(nmarkers))
-    
     ncells2 <- 2001
     all.values2 <- matrix(rnorm(ncells2*nmarkers, sd=1), nrow=ncells2, ncol=nmarkers)
     colnames(all.values2) <- colnames(all.values1)
-    
+
+    # Initial checks.
     out <- prepareCellData(list(X=all.values1, Y=all.values2))
     expect_identical(nrow(out), 0L)
     expect_identical(ncol(out), 2L)
@@ -33,14 +32,45 @@ test_that("prepareCellData works as expected", {
     original <- paste0(sid, ".", cid)
     m <- match(original, current)
     expect_equivalent(rbind(all.values1, all.values2), t(pre$data)[m,])
+    expect_identical(dim(metadata(out)$cydar$unused), c(0L, as.integer(ncells1+ncells2)))
+})
 
-    # Trying what happens with marker specifications.
+set.seed(90001)
+test_that("prepareCellData works with subsetted markers", {
+    # Setup.
+    nmarkers <- 10
+    ncells1 <- 1001
+    all.values1 <- matrix(rnorm(ncells1*nmarkers, sd=1), nrow=ncells1, ncol=nmarkers)
+    colnames(all.values1) <- paste0("X", seq_len(nmarkers))
+    ncells2 <- 2001
+    all.values2 <- matrix(rnorm(ncells2*nmarkers, sd=1), nrow=ncells2, ncol=nmarkers)
+    colnames(all.values2) <- colnames(all.values1)
+
+    # Initial check.
     spec <- c(2,3,4)
     set.seed(100)
     out.sub <- prepareCellData(list(X=all.values1, Y=all.values2), markers=spec)
     set.seed(100)
     out.ref <- prepareCellData(list(X=all.values1[,spec], Y=all.values2[,spec]))
-    expect_equal(out.sub, out.ref)
+
+    tmp.sub <- metadata(out.sub)$cydar
+    tmp.ref <- metadata(out.ref)$cydar
+    expect_identical(tmp.sub$markers[tmp.sub$markers$used,,drop=FALSE], tmp.ref$markers)
+    tmp.sub$unused <- NULL
+    tmp.ref$unused <- NULL
+    tmp.sub$markers <- NULL
+    tmp.ref$markers <- NULL
+    expect_equal(tmp.sub, tmp.ref)
+
+    # Ensuring that the unused fields are valid.
+    expect_identical(metadata(out.sub)$cydar$unused, 
+        t(rbind(all.values1, all.values2)[tmp.sub$precomputed$order,-spec,drop=FALSE]))
+
+    # Checking that we can subset by name as well.
+    spec <- c("X2","X3","X4")
+    set.seed(100)
+    out.sub2 <- prepareCellData(list(X=all.values1, Y=all.values2), markers=spec)
+    expect_equal(out.sub, out.sub2)
 })
 
 test_that("prepareCellData behaves with ncdfFlowSet inputs", {
@@ -63,6 +93,7 @@ test_that("prepareCellData behaves with ncdfFlowSet inputs", {
     expect_identical(cid[pre$order], unname(metadata(out)$cydar$cell.id))
 })
 
+set.seed(90002)
 test_that("prepareCellData behaves with silly inputs", {
     # Setup.
     nmarkers <- 10

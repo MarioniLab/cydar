@@ -19,16 +19,16 @@ prepareCellData <- function(x, markers=NULL, ...)
 
     # Picking markers to use.
     used <- .chosen_markers(markers, marker.names)
-    marker.names <- marker.names[used]
-    reorg <- precluster(exprs[,used], ...)
+    reorg <- precluster(exprs[,used,drop=FALSE], ...)
   
     # Collating the output. 
     output <- SummarizedExperiment(colData=DataFrame(row.names=sample.names))
     metadata(output)$cydar <- list(
         precomputed=reorg,
-        markers=marker.names,
+        markers=DataFrame(row.names=marker.names, used=used),
         sample.id=sample.id[reorg$order],
-        cell.id=cell.id[reorg$order]
+        cell.id=cell.id[reorg$order],
+        unused=t(exprs[reorg$order,!used,drop=FALSE])
     )
     as(output, "CyData")
 }

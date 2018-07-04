@@ -131,8 +131,11 @@ setMethod("intensities", "CyData", function(x) {
 
 #' @export
 #' @importFrom flowCore markernames
-setMethod("markernames", "CyData", function(object) {
-    return(metadata(object)$cydar$markers)
+setMethod("markernames", "CyData", function(object, all=FALSE) {
+    mdf <- metadata(object)$cydar$markers
+    all.markers <- rownames(mdf)
+    if (!all) {
+        all.markers <- all.markers[mdf$used]
+    }
+    return(all.markers)
 })
-
-
