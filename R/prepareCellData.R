@@ -26,7 +26,7 @@ prepareCellData <- function(x, markers=NULL, ...)
     output <- SummarizedExperiment(colData=DataFrame(row.names=sample.names))
     metadata(output)$cydar <- list(
         precomputed=reorg,
-        markers=marker.names[used],
+        markers=marker.names,
         sample.id=sample.id[reorg$order],
         cell.id=cell.id[reorg$order]
     )
@@ -43,7 +43,14 @@ prepareCellData <- function(x, markers=NULL, ...)
 {
     if (is.list(x)) { 
         sample.names <- names(x)
-        if (is.null(sample.names)) { stop("list must be named by sample") }
+        if (is.null(sample.names)) { 
+            sample.names <- seq_along(x)
+        }
+
+        if (!length(x)) {
+            stop("number of samples must be positive")
+        } 
+
         marker.names <- colnames(x[[1]])
         for (i in sample.names) {
             x[[i]] <- as.matrix(x[[i]])
@@ -52,9 +59,10 @@ prepareCellData <- function(x, markers=NULL, ...)
             stopifnot(identical(tmp, marker.names))
         }
         expr.val <- x
-    } else if (is(x, "ncdfFlowSet")) { 
-        sample.names <- Biobase::sampleNames(x)
-        marker.names <- BiocGenerics::colnames(x)
+
+    } else if (is(x, "ncdfFlowSet")) {
+        sample.names <- sampleNames(x)
+        marker.names <- colnames(x)
         by.sample <- seq_along(sample.names)
         expr.val <- lapply(by.sample, FUN=function(i) flowCore::exprs(x[[i]]))
     } else {
