@@ -6,48 +6,32 @@
 \description{Convert single-cell marker intensities from a mass cytometry experiment into a format for efficient counting.}
 
 \usage{
-prepareCellData(x, naive=FALSE, markers=NULL, ...)
+prepareCellData(x, markers=NULL, ...)
 }
 
 \arguments{
 \item{x}{A named list of numeric matrices, where each matrix corresponds to a sample and contains expression intensities for each cell (row) and each marker (column).
 Alternatively, a ncdfFlowSet object containing the same information.}
-\item{naive}{A logical scalar specifying whether k-means clustering should be performed.}
-\item{markers}{A vector specifying the markers to use in distance calculations.}
-\item{...}{Additional arguments to pass to \code{\link{kmeans}}.}
+\item{markers}{A vector specifying the markers to use in downstream analyses.}
+\item{...}{Additional arguments to pass to \code{\link{precluster}}.}
 }
 
 \details{
 This function constructs a CyData object from the marker intensities of each cell in one or more samples.
+The \code{\link{precluster}} function is used to precompute internal structures for downstream nearest-neighbour searching.
 
-If \code{naive=FALSE}, this function performs k-means clustering on all the cells based on their marker intensities.
-The number of clusters is set to the square-root of the total number of cells.
-The cluster centres and cell assignments are then stored for later use in speeding up high-dimensional searches.
-Intensity matrices from several samples are also merged into a single matrix for greater efficiency.
+If \code{markers} is specified, only the selected markers will be used in the precomputation.
+This restricts the markers that are used in downstream functions - namely, \code{\link{countCells}} and \code{\link{neighborDistances}}.
+By default, \code{markers=NULL} which means that all supplied markers will be used.
 
-Note that \code{naive} does \emph{not} change the results of downstream functions, only the computational algorithm with which they are obtained.
-
-If \code{markers} is specified, only the specified markers will be used in the distance calculations.
-This also applies to calculations in downstream functions like \code{\link{countCells}} and \code{\link{neighborDistances}}.
-All other markers will be ignored unless their usage is explicitly requested.
-By default, \code{markers=NULL} which means that all supplied markers will be used in the calculations.
+Markers that are \emph{not} in \code{markers} will be ignored in distance calculations.
+However, their intensities are still stored in the output object, for use in functions like \code{\link{medIntensities}}.
 }
 
 \value{
-A CyData object with marker intensities for each cell stored in the \code{cellIntensities} slot.
-In addition:
-\itemize{
-\item Marker names are stored as the row names of the \code{markerData} slot.
-An additional \code{used} field also specifies whether the marker was used or not.
-\item Sample names are stored as the column names of the output object.
-\item \code{cellData} contains \code{sample.id}, an integer vector specifying the element of \code{x} that each cell was taken from;
-    and \code{cell.id}, an integer vector specifying the row index of each cell in its original matrix.
-\item If \code{naive=FALSE}, the metadata contains \code{cluster.centers}, a numeric matrix containing the centre coordinates of each cluster (column) for each marker (row);
-    and \code{cluster.info}, a list containing information for each cluster.
-}
-Each element of \code{cluster.info} is a list, containing the zero-indexed column index of the output matrix that specifies the first cell in the cluster;
-    as well as a numeric vector of distances between each cell in the cluster and the cluster centre.
-Cells in \code{cellIntensities} are arranged in blocks corresponding to the clusters and ordered such that the distances are increasing.
+A CyData object with no rows and the number of columns equal to the number of samples in \code{x}.
+Sample names are stored as the column names of the output object.
+Precomputed values for internal use are stored in the \code{"cydar"} field of the \code{metadata} slot.
 }
 
 \author{
