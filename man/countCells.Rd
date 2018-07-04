@@ -36,7 +36,7 @@ The default value of 0.5 means that, for any one marker, cells with +0.5 or -0.5
 This value is sensible as intensities are usually on a log-10 scale, such that a total of 10-fold variability in marker intensities is tolerated.
 
 The coordinates are reported as (weighted) medians across all cells in each hypersphere.
-This better reflects the location of the hypersphere if the cells are not distributed around the centre.
+Compared to the center, the median better reflects the location of the hypersphere if the cells are not distributed around the centre.
 Each cell is weighted inversely proportional to the total number of cells in the corresponding sample.
 This ensures that large samples do not dominate the median calculation.
 
@@ -52,14 +52,15 @@ Neither this or \code{naive} will not affect the final results, only the speed w
 A CyData object containing the following information:
 \describe{
 \item{\code{counts}}{An integer matrix of counts for each hypersphere (row) and sample (column) in the \code{assays} slot.}
-\item{\code{intensities}:}{A numeric matrix of median intensities for each hypersphere (row) and marker (column), stored in the \code{rowData} slot.}
-\item{\code{cellAssignments}:}{A list of integer vectors specifying the cells contained within each hypersphere, stored in the \code{rowData} slot.}
-\item{\code{totals}:}{An integer vector specifying the total number of cells in each sample, stored as a field in the \code{colData} slot.}
-\item{\code{center.cell}:}{An integer vector specifying the cell that is used as the centre of each hypersphere, stored as a field in the \code{rowData} slot.}
-\item{\code{tol}:}{An integer scalar equal to \code{tol}, stored in the \code{metadata} slot.}
+\item{\code{intensities}:}{A numeric matrix of median intensities for each hypersphere (row) and marker (column), stored in the \code{"cydar"} DataFrame in the \code{rowData} slot.}
+\item{\code{cellAssignments}:}{A list of integer vectors specifying the cells contained within each hypersphere, stored in the \code{"cydar"} DataFrame in the \code{rowData}.}
+\item{\code{totals}:}{An integer vector specifying the total number of cells in each sample, stored as a field in the \code{colData}.}
+\item{\code{center.cell}:}{An integer vector specifying the cell that is used as the centre of each hypersphere, stored in the \code{"cydar"} DataFrame in the \code{rowData}.}
+\item{\code{tol}:}{An integer scalar equal to \code{tol}, stored in the \code{"cydar"} list in the \code{metadata} slot.}
 }
-Any existing \code{rowData}, \code{colData} and \code{assays} are discarded.
-All other slots (i.e., the \code{metadata}) are left unchanged from the values supplied in \code{x}.
+
+Any existing \code{rowData} and \code{assays} are discarded.
+All other slots are left unchanged from the values supplied in \code{x}.
 }
 
 \author{
