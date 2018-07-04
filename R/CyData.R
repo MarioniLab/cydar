@@ -37,6 +37,7 @@ setValidity2("CyData", function(object) {
 Rather, rerun prepareCellData() with a subset of samples."); 
 }
 
+#' @export
 setMethod("[", c("CyData", "ANY", "ANY"), function(x, i, j, ..., drop=TRUE) {
     if (!missing(j)) { 
         .col_warning()
@@ -44,13 +45,15 @@ setMethod("[", c("CyData", "ANY", "ANY"), function(x, i, j, ..., drop=TRUE) {
     callNextMethod()
 })
 
+#' @export
 setMethod("[<-", c("CyData", "ANY", "ANY", "CyData"), function(x, i, j, ..., value) {
     if (!missing(j)) { 
-        .colWarning()
+        .col_warning()
     }
     callNextMethod()
 })
 
+#' @export
 setMethod("cbind", "CyData", function(..., deparse.level=1) {
     .col_warning()
     callNextMethod()
@@ -112,9 +115,12 @@ setGeneric("cellAssignments", function(x) standardGeneric("cellAssignments"))
 
 #' @export
 setMethod("cellAssignments", "CyData", function(x) {
-    out <- .raw_cellAssignments(x)
-    names(out) <- rownames(x)
-    return(out)
+    val <- .raw_cellAssignments(x)
+    if (is.null(val)) {
+        stop("cell assignments are not available in 'x', run 'countCells()'")
+    }
+    names(val) <- rownames(x)
+    return(val)
 })
 
 #' @export
@@ -124,6 +130,9 @@ setGeneric("intensities", function(x) standardGeneric("intensities"))
 #' @importFrom flowCore markernames
 setMethod("intensities", "CyData", function(x) {
     val <- .raw_intensities(x)
+    if (is.null(val)) {
+        stop("intensities are not available in 'x', run 'countCells()'")
+    }
     colnames(val) <- markernames(x)
     rownames(val) <- rownames(x)
     val
