@@ -85,38 +85,24 @@ setMethod("show", signature("CyData"), function(object) {
 ## Defining some getters and setters for internal use.
 
 #' @importFrom S4Vectors metadata
-.raw <- function(x) metadata(x)$cydar
+.raw_metadata <- function(x) metadata(x)$cydar
 
-.raw_precomputed <- function(x) .raw(x)$precomputed
+.raw_precomputed <- function(x) .raw_metadata(x)$precomputed
 
 .raw_cellIntensities <- function(x) .raw_precomputed(x)$data
 
-.raw_sample_id <- function(x) .raw(x)$sample.id
+.raw_sample_id <- function(x) .raw_metadata(x)$sample.id
 
-.raw_cell_id <- function(x) .raw(x)$cell.id
-
-#' @importFrom SummarizedExperiment rowData
-.raw_center_cell <- function(x) rowData(x)$center.cell
+.raw_cell_id <- function(x) .raw_metadata(x)$cell.id
 
 #' @importFrom SummarizedExperiment rowData
-.raw_cellAssignments <- function(x) rowData(x)$cellAssignments
+.raw_rowdata <- function(x) rowData(x)$cydar
 
-#' @importFrom SummarizedExperiment rowData
-.raw_intensities <- function(x) rowData(x)$intensities
+.raw_center_cell <- function(x) .raw_rowdata(x)$center.cell
 
-setGeneric("cellAssignments<-", function(x, value) standardGeneric("cellAssignments<-"))
+.raw_cellAssignments <- function(x) .raw_rowdata(x)$cellAssignments
 
-setReplaceMethod("cellAssignments", "CyData", function(x, value) {
-    rowData(x)$cellAssignments <- value
-    return(x)
-})
-
-setGeneric("intensities<-", function(x, value) standardGeneric("intensities<-"))
-
-setReplaceMethod("intensities", "CyData", function(x, value) {
-    rowData(x)$intensities <- value
-    return(x)
-})
+.raw_intensities <- function(x) .raw_rowdata(x)$intensities
 
 ################################################
 ## Defining some getters for external use.
