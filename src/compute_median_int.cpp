@@ -23,7 +23,7 @@ SEXP compute_median_int(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
         throw std::runtime_error("sample IDs should be an integer vector of length equal to the number of cells"); 
     }
     for (const auto& cursample : Samples) { 
-        if (cursample < 0 || cursample >= nsamples) {
+        if (cursample <= 0 || cursample > nsamples) {
             throw std::runtime_error("sample IDs out of range");
         }
     }
@@ -34,15 +34,11 @@ SEXP compute_median_int(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
         output[u]=Rcpp::NumericMatrix(ngroups, nsamples);
     }
 
-    std::deque<int> collected;
     std::vector<std::deque<double> > all_intensities(nsamples);
-
     for (int g=0; g<ngroups; ++g) {
-        // Unpacking the assignments.
         const Rcpp::IntegerVector curass(Assignments[g]);
-        for (auto& curdex : collected) {
-            --curdex; // Getting to zero-index.
-            if (curdex < 0 || curdex >= ncells) {
+        for (auto curdex : curass) {
+            if (curdex <= 0 || curdex > ncells) {
                 throw std::runtime_error("cell assignment indices out of range");
             }
         }
@@ -50,8 +46,9 @@ SEXP compute_median_int(SEXP exprs, SEXP nsamp, SEXP sample_id, SEXP assignments
         // Computing the median intensity.
         for (size_t u=0; u<nmarkers; ++u) {
             auto curexprs=Exprs.row(u);
-            for (const auto& curdex : collected) { 
-                all_intensities[Samples[curdex]].push_back(curexprs[curdex]);
+            for (auto curdex : curass) { 
+                --curdex; // 1-based indexing.
+                all_intensities[Samples[curdex] - 1].push_back(curexprs[curdex]);
             }
 
             auto curout=output[u].row(g);
