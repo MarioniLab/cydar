@@ -14,7 +14,7 @@ medIntensities(x, markers)
 }
 
 \value{
-A CyData object is returned equivalent to \code{x}, but with numeric matrices of sample-specific median intensities as additional elements of the \code{Assays} slot.
+A CyData object is returned equivalent to \code{x}, but with numeric matrices of sample-specific median intensities as additional elements of the \code{assays} slot.
 }
 
 \details{
@@ -23,10 +23,11 @@ This is returned as a matrix of median intensities, with one value per sample (c
 If a sample has no cells in a group, the corresponding entry of the matrix will be set to \code{NA}.
 
 The groups in \code{x} should be defined using a different set of markers than in \code{markers}.
-If the same markers were used for both functions, then a shift is unlikely to be observed.
-This is because, by definition, the groups will contain cells with similar intensities for the markers used.
+Specifically, the \code{markers} used in \code{\link{prepareCellData}} should not be the same as the \code{markers} in this function.
+If the same markers are used for both functions, then a shift is unlikely to be observed.
+This is because, by definition, the groups will contain cells with similar intensities for those markers. 
 
-The idea is to use these values for weighted linear regression to identify a shift in intensity within each hypersphere.
+The idea is to use the median intensities for weighted linear regression to identify a shift in intensity within each hypersphere.
 The weight for each group/sample is defined as the number of cells, i.e., the \code{"counts"} assay in \code{x}.
 This accounts for the precision with which the median is estimated, under certain assumptions.
 See the Examples for how this data can be prepared for entry into analysis packages like limma.
@@ -59,12 +60,9 @@ In situations where markers can be separated into two sets (e.g., cell type and 
 The first is to define groups based on the \dQuote{primary} set of markers, then use \code{medIntensities} to identify shifts in each group for each of the \dQuote{secondary} markers.
 This is the best approach for detecting increases or decreases in marker intensity that affect a majority of cells in each group.
 
-The second approach is to recount cells into new groups using \code{\link{recountCells}} to focus on each secondary marker.
+The second approach is to use all markers in \code{\link{prepareCellData}} and count cells accordingly in \code{\link{countCells}}.
 This provides more power to detect changes in marker intensity that only affect a subset of cells in each group.
-Such changes are also easier to interpret as any correlation with respect to the primary markers for the affected subset can be studied.
-
-The second approach is also more useful if one is interested in identifying cells with concomitant changes in multiple secondary markers.
-Indeed, if we were interested in studying changes in all combinations of second markers, we would effectively revert to the obvious approach of just using all markers for counting.
+It is also more useful if one is interested in identifying cells with concomitant changes in multiple secondary markers.
 However, this tends to be less effective for studying changes in a specific marker, due to the loss of precision with increased dimensionality.
 }
 
@@ -73,8 +71,8 @@ Aaron Lun
 }
 
 \seealso{
-\code{\link{countCells}},
-\code{\link{recountCells}}
+\code{\link{prepareCellData}},
+\code{\link{countCells}}
 }
 
 \examples{

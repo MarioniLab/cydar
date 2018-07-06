@@ -1,11 +1,8 @@
-#####################################################
-# This tests the count machinery, to make sure the counts are right.
-
-require(cydar); require(testthat)
+# Testing the median intensity function.
+# require(cydar); require(testthat); source("test-medint.R")
 
 set.seed(100)
 nmarkers <- 10
-tol <- 0.5
 
 # Setup.
 ncells1 <- 1001
@@ -17,49 +14,49 @@ all.values2 <- matrix(rnorm(ncells2*nmarkers, sd=1), nrow=ncells2, ncol=nmarkers
 colnames(all.values2) <- colnames(all.values1)
 fs <- list(A=all.values1, B=all.values2)
 
-# Counting with specified parameters.
-
-for (setup in 1:4) { 
-    to.use <- rep(c(TRUE, FALSE), each=5)
-    filter <- 1L
-    tol <- 0.5
-    if (setup==2L) {
-        to.use <- rep(c(TRUE, FALSE), c(8, 2))
-    } else if (setup==3L) {
-        to.use <- rep(c(TRUE, FALSE), each=5)
-    } else if (setup==4L) {
-        tol <- 1L
-    }
-    
+test_that("medIntensities works as expected", {
+    to.use <- rep(c(TRUE, FALSE), c(8, 2))
     suppressWarnings(cd <- prepareCellData(fs, markers=to.use))
-    out <- countCells(cd, filter=1L)
+    out <- countCells(cd, downsample=1L, filter=1L)
     rcnt <- medIntensities(out, markers=!to.use)
 
-    expect_identical(assay(out, "counts"), assay(rcnt, "counts"))
-    expect_identical(cellData(out), cellData(rcnt))
-    expect_identical(colData(out), colData(rcnt))
-    expect_identical(rowData(out), rowData(rcnt))
-    expect_identical(cellIntensities(out), cellIntensities(rcnt))
-    expect_identical(markerData(rcnt), markerData(out))
-    
-    ref.groups <- unpackIndices(cellAssignments(out))
-    for (u in which(!to.use)) { 
-        cur.assay <- assay(rcnt, paste0("med.", markernames(rcnt)[u]))
-        ref.assay <- matrix(NA_real_, length(ref.groups), ncol(rcnt))
-        colnames(ref.assay) <- sampleNames(rcnt)
-        sample.names <- sampleNames(rcnt)[cellData(rcnt)$sample.id]
+    # Median intensities are computed correctly.
+    combined <- rbind(all.values1[,to.use], all.values2[,to.use])
+    ref.groups <- kmknn::findNeighbors(combined, threshold=metadata(out)$cydar$tol * sqrt(sum(to.use)), get.distance=FALSE)$index
+    sample.ids <- rep(c("A", "B"), c(ncells1, ncells2))
 
-        for (r in seq_len(nrow(out))) {
+    for (u in which(!to.use)) { 
+        cur.assay <- assay(rcnt, paste0("med.", markernames(rcnt, all=TRUE)[u]))
+        ref.assay <- matrix(NA_real_, length(ref.groups), ncol(rcnt))
+        colnames(ref.assay) <- colnames(rcnt)
+
+        all.int <- c(all.values1[,u], all.values2[,u])
+        for (r in seq_along(ref.groups)) { 
             cur.group <- ref.groups[[r]]
-            by.sample <- split(cur.group, sample.names[cur.group])
+            by.sample <- split(cur.group, sample.ids[cur.group])
 
             for (s in names(by.sample)) { 
-                ref.assay[r,s] <- median(cellIntensities(rcnt)[u,by.sample[[s]]])
+                ref.assay[r,s] <- median(all.int[by.sample[[s]]])
             }
         }
         expect_equal(ref.assay, cur.assay)
     } 
-}
 
+    # Other fields remain unchanged.
+    expect_identical(assay(out, "counts"), assay(rcnt, "counts"))
+    expect_identical(cellAssignments(out), cellAssignments(rcnt))
+    expect_identical(intensities(out), intensities(rcnt))
 
+    # Responds to downsampling correctly.
+    alt <- countCells(cd, downsample=6L, filter=1L)
+    rcnt2 <- medIntensities(alt, markers=!to.use)
+    expect_equal(rcnt2, rcnt[c(seq_len(ncells1), seq_len(ncells2)) %% 6L == 1L,])
 
+    # Handles alternative inputs.
+    rcnt3 <- medIntensities(out, markers=c("X9", "X10"))
+    expect_equal(rcnt, rcnt3)
+
+    # Handles empty inputs.
+    rcnt4 <- medIntensities(out, markers=character(0))
+    expect_equal(out, rcnt4)
+})
