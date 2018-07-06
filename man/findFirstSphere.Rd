@@ -9,7 +9,9 @@ findFirstSphere(coords, pvalues, threshold=1, block=NULL, naive=FALSE)
 }
 
 \arguments{
-\item{coords}{A numeric matrix of hypersphere coordinates (median locations for all markers), where rows correspond to hyperspheres and columns correspond to markers.}
+\item{coords}{A numeric matrix of hypersphere coordinates (median locations for all markers), where rows correspond to hyperspheres and columns correspond to markers.
+
+Alternatively, a CyData object containing median intensities for groups of cells, such as that produced by \code{\link{countCells}}.}
 \item{pvalues}{A numeric vector of p-values, one for each hypersphere/row of \code{coords}.}
 \item{threshold}{A numeric scalar specifying the maximum distance between the locations of two redundant hyperspheres.}
 \item{block}{A factor specifying which hyperspheres belong to which block, where non-redundant hyperspheres are identified within each block.}
@@ -35,8 +37,6 @@ If \code{block} is set, non-redundant hyperspheres are only identified within ea
 For example, one can set \code{block} to the sign of the log-fold change.
 This ensures that hyperspheres changing in one direction are not considered redundant to those changing in another direction.
 By default, all hyperspheres are considered to be part of the same block.
-
-Note that setting \code{naive=TRUE} will only change the speed of the algorithm, not the results.
 
 % Does the spatial FDR control the FDR across the reported non-redundant locations?
 % In general, using spatialFDR() is fine; the non-redundant locations can be considered as centres of non-overlapping hypercubic partitions of side length "threshold".

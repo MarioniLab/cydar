@@ -1,11 +1,12 @@
 # This checks that the findFirstSphere function is operating properly. 
+# require(cydar); require(testthat); source("test-first.R")
 
-require(cydar); require(testthat)
 set.seed(400)
-nhypers <- 1000
+test_that("findFirstSphere is working correctly", {
+    nhypers <- 1000
+    nmarkers <- 10
 
-for (nmarkers in c(10, 20, 30)) {
-    coords <- matrix(rnorm(nhypers*nmarkers, sd=1), nrow=nhypers, ncol=nmarkers)
+    coords <- matrix(rnorm(nhypers*nmarkers, sd=1), ncol=nmarkers)
     pval <- rbeta(nhypers, 1, 10)
     tcoords <- t(coords)
     o <- order(pval) 
@@ -13,9 +14,8 @@ for (nmarkers in c(10, 20, 30)) {
     
     for (threshold in c(0.5, 1, 2)) {
         xkeep <- findFirstSphere(coords, pvalues=pval, threshold=threshold)
-        nkeep <- findFirstSphere(coords, pvalues=pval, threshold=threshold, naive=TRUE)
-        expect_identical(xkeep, nkeep)
-        
+
+        # Checking that the exclusion is correct.
         ref <- logical(nhypers)
         locals <- integer(nhypers)
         for (j in seq_along(o)) {
@@ -39,14 +39,27 @@ for (nmarkers in c(10, 20, 30)) {
             all.out[chosen] <- findFirstSphere(coords[chosen,,drop=FALSE], pvalues=pval[chosen], threshold=threshold)
         }
         expect_identical(all.out, bkeep)
-
-        # Throwing in some NA values and checking that it beahves properly.
-        discarded <- c(1,4,5,6,7)
-        subcoords <- coords
-        subcoords[,discarded] <- NA
-        subkeep.1 <- findFirstSphere(subcoords, pvalues=pval, threshold=threshold)
-        subkeep.2 <- findFirstSphere(subcoords[,-discarded], pvalues=pval, threshold=threshold)
-        expect_identical(subkeep.1, subkeep.2)
     }
-}
+})
 
+test_that("findFirstSphere behaves sensibly with different inputs", {
+    ncells <- 2000
+    nmarkers <- 5
+
+    # Trying CyData inputs.
+    coords <- matrix(rnorm(ncells*nmarkers, sd=1), ncol=nmarkers)
+    colnames(coords) <- paste0("X", seq_len(nmarkers))
+    cd <- prepareCellData(list(A=coords))
+    cnt <- countCells(cd, downsample=5, filter=1L)
+    pval <- rbeta(nrow(cnt), 1, 10)
+
+    for (threshold in c(0.5, 1, 2)) {
+        out <- findFirstSphere(cnt, pval, threshold=threshold)
+        ref <- findFirstSphere(intensities(cnt), pval, threshold=threshold)
+        expect_equal(out, ref)
+    }
+
+    # Trying silly inputs.
+    expect_error(findFirstSphere(cnt[0,], pval, threshold=threshold), "length")
+    expect_identical(findFirstSphere(cnt[0,], pval[0], threshold=threshold), logical(0))
+})
