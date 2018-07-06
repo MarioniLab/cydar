@@ -9,7 +9,7 @@ extern "C" {
 static const R_CallMethodDef all_call_entries[] = {
     REGISTER(compute_density, 2),
     REGISTER(compute_hyperstats, 4),
-    REGISTER(drop_redundant, 3),
+    REGISTER(drop_redundant, 4),
     REGISTER(compute_median_int, 4),
     {NULL, NULL, 0}
 };
