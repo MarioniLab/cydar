@@ -29,34 +29,37 @@ plotCellLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.out=
 }
 
 #' @importFrom grDevices rgb
-.interpolate_cols <- function(val, max.val, left, middle, right) {
+.interpolate_cols <- function(val, max.val, left, middle, right) 
+# Need to account for the fact that RGB colors are squared.
+{
     prop <- val/max.val
     prop[prop < -1] <- -1
     prop[prop > 1] <- 1
 
     pos <- prop > 0 
-    pos.output <- vector("list", 3)
-    for (i in seq_along(pos.output)) { 
-        grad <- right[i] - middle[i]
-        pos.output[[i]] <- grad * prop[pos] + middle[i] 
-    }
-    pos.col <- rgb(pos.output[[1]], pos.output[[2]], pos.output[[3]])
+    pos.output <- neg.output <- vector("list", 3)
 
-    neg.output <- vector("list", 3)
-    for (i in seq_along(neg.output)) { 
-        grad <- left[i] - middle[i]
-        neg.output[[i]] <- grad * -prop[!pos] + middle[i] 
+    for (i in seq_along(pos.output)) {
+        true.right <- right[i]^2
+        true.left <- left[i]^2
+        true.middle <- middle[i]^2
+
+        pgrad <- true.right - true.middle
+        pos.output[[i]] <- sqrt(pgrad * prop[pos] + true.middle)
+
+        ngrad <- true.left - true.middle
+        neg.output[[i]] <- sqrt(ngrad * -prop[!pos] + true.middle)
     }
-    neg.col <- rgb(neg.output[[1]], neg.output[[2]], neg.output[[3]])
 
     all.cols <- character(length(pos))
-    all.cols[pos] <- pos.col
-    all.cols[!pos] <- neg.col
+    all.cols[pos] <- rgb(pos.output[[1]], pos.output[[2]], pos.output[[3]])
+    all.cols[!pos] <- rgb(neg.output[[1]], neg.output[[2]], neg.output[[3]])
     return(all.cols)
 }
 
 #' @export
 #' @importFrom graphics plot
+#' @importFrom viridis viridis
 plotCellIntensity <- function(x, y, intensity, irange=NULL, length.out=100, pch=16, ...) 
 # Visualizes the cells with appropriate coloration, using a PCA plot by default.
 #
@@ -72,6 +75,9 @@ plotCellIntensity <- function(x, y, intensity, irange=NULL, length.out=100, pch=
 
     all.cols <- viridis(n=length.out)
     mdpts <- seq(from=irange[1], to=irange[2], length.out=length.out)
+
+    # Note that 'mdpts' represents the midpoints of each category, 
+    # so we have to add half the category width to get the actual boundary.
     actual.threshold <- mdpts + (mdpts[2] - mdpts[1])/2
     ix <- pmin(length.out, findInterval(intensity, actual.threshold) + 1)
     cur.cols <- all.cols[ix]
