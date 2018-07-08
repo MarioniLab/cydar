@@ -14,7 +14,7 @@ countCells(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10)
 \arguments{
 \item{x}{A CyData object produced by \code{\link{prepareCellData}}.}
 \item{tol}{A numeric scalar proportional to the hypersphere radius.}
-\item{BPPARAM}{A BiocParallelParam object specifying how parallelization is to be performed.}
+\item{BPPARAM}{A BiocParallelParam object specifying how parallelization is to be performed in \code{\link{findNeighbors}}.}
 \item{downsample}{An integer scalar specifying the frequency with which cells are sampled to form hyperspheres.}
 \item{filter}{An integer scalar specifying the minimum count sum required to report a hypersphere.} 
 }
@@ -43,9 +43,6 @@ This ensures that large samples do not dominate the median calculation.
 All hyperspheres with count sums below \code{filter} are removed by default.
 Such hyperspheres do not have enough counts (and thus, information) for downstream analyses.
 Removing them reduces the amount of memory required to form the output matrix.
-
-Users can also increase speed by setting \code{BPPARAM} to use multiple cores.
-Neither this or \code{naive} will not affect the final results, only the speed with which they are obtained.
 }
 
 \value{

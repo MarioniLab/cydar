@@ -5,17 +5,16 @@
 \description{Tests whether each hypersphere is not redundant to (i.e., lies more than a threshold distance away from) another hypersphere with a lower p-value.}
 
 \usage{
-findFirstSphere(coords, pvalues, threshold=1, block=NULL, naive=FALSE)
+findFirstSphere(x, pvalues, threshold=1, block=NULL)
 }
 
 \arguments{
-\item{coords}{A numeric matrix of hypersphere coordinates (median locations for all markers), where rows correspond to hyperspheres and columns correspond to markers.
+\item{x}{A numeric matrix of hypersphere coordinates (median locations for all markers), where rows correspond to hyperspheres and columns correspond to markers.
 
 Alternatively, a CyData object containing median intensities for groups of cells, such as that produced by \code{\link{countCells}}.}
-\item{pvalues}{A numeric vector of p-values, one for each hypersphere/row of \code{coords}.}
+\item{pvalues}{A numeric vector of p-values, one for each row (i.e., hypersphere) of \code{x}.}
 \item{threshold}{A numeric scalar specifying the maximum distance between the locations of two redundant hyperspheres.}
 \item{block}{A factor specifying which hyperspheres belong to which block, where non-redundant hyperspheres are identified within each block.}
-\item{naive}{A logical scalar specifying whether naive counting should be performed.}
 }
 
 \details{
@@ -50,7 +49,7 @@ By default, all hyperspheres are considered to be part of the same block.
 }
 
 \value{
-A logical vector indicating whether each of the hyperspheres in \code{coords} is non-redundant.
+A logical vector indicating whether each of the hyperspheres in \code{x} is non-redundant.
 }
 
 \author{

@@ -5,13 +5,12 @@
 \description{Given a set of labels for annotated hyperspheres, propagate labels to the surrounding unannotated hyperspheres.}
 
 \usage{
-labelSpheres(coords, labels, naive=FALSE)
+labelSpheres(coords, labels)
 }
 
 \arguments{
 \item{coords}{A numeric matrix of hypersphere coordinates, containing the median intensity of each marker (column) in each hypersphere (row).}
 \item{labels}{A character vector of labels for each hypersphere, set to an empty string for unannotated hyperspheres.}
-\item{naive}{A logical scalar specifying whether a naive search should be performed.}
 }
 
 \details{
@@ -39,10 +38,6 @@ labels <- character(nrow(coords))
 labels[1:4] <- c("B", "CD4T", "CD8T", "Mono")
 
 ref <- labelSpheres(coords, labels)
-naive <- labelSpheres(coords, labels, naive=TRUE)
-
-\dontshow{
-stopifnot(identical(ref, naive))
-}
+head(ref)
 }
 
