@@ -46,5 +46,5 @@
 # Find points should be used upon downsampling, based on original cell IDs.
 # This ensures that the same points are chosen regardless of the samples used.
 {
-    which(.raw_cell_id(x) %% as.integer(downsample) == 1L)
+    which((.raw_cell_id(x) - 1L) %% as.integer(downsample) == 0L) # using -1L to handle downsample=1.
 }
