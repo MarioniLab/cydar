@@ -1,6 +1,7 @@
 #' @export
 #' @importFrom kmknn findKNN findNeighbors precluster
-spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALSE) 
+#' @importFrom methods is
+spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
 # This controls the spatial FDR across a set of plot coordinates.
 # Each point is weighted by the reciprocal of its density, based on the specified 'radius'.
 # A frequency-weighted version of the BH method is then applied to the p-values.
@@ -8,9 +9,15 @@ spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALS
 # written by Aaron Lun
 # created 23 May 2016
 {
-    if (length(pvalues)!=nrow(coords)) { stop("coords 'nrow' and p-value vector length are not the same") }
-    colnames(coords) <- seq_len(ncol(coords)) # dummy colnames to keep it happy.
-    coords <- .find_valid_markers(coords, return.matrix=TRUE) # dropping NA markers.
+    if (is(x, "CyData")) {
+        coords <- .raw_intensities(x)
+    } else {
+        coords <- x
+    }
+
+    if (length(pvalues)!=nrow(coords)) { 
+        stop("coords 'nrow' and p-value vector length are not the same") 
+    }
 
     # Discarding NA pvalues.
     haspval <- !is.na(pvalues)
@@ -19,7 +26,7 @@ spatialFDR <- function(coords, pvalues, neighbors=50, bandwidth=NULL, naive=FALS
         pvalues <- pvalues[haspval]
     }
 
-    pre <- precluster(t(coords))
+    pre <- precluster(coords)
 
     # Defining the bandwidth.        
     if (is.null(bandwidth)) { 
