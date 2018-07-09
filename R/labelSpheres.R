@@ -1,11 +1,18 @@
 #' @export
 #' @importFrom kmknn queryKNN
-labelSpheres <- function(coords, labels, naive=FALSE)
+labelSpheres <- function(x, labels)
 # Spreads the labels to all hyperspheres, based on the closest labelled hypersphere 
 # 
 # written by Aaron Lun 
 # created 15 May 2017
 {
+    if (is(x, "CyData")) {
+        .check_cell_data(x)
+        coords <- .raw_intensities(x)
+    } else {
+        coords <- x
+    }
+
     stopifnot(identical(nrow(coords), length(labels)))
     has.label <- labels!=""
     if (!any(has.label) || all(has.label)) { 
