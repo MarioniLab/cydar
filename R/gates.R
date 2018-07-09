@@ -1,3 +1,6 @@
+#' @export
+#' @importFrom stats median mad
+#' @importFrom flowCore rectangleGate
 outlierGate <- function(x, name, nmads=3, type=c("both", "upper", "lower")) 
 # Constructs a gate to remove outliers in 1 dimension, 
 # based on intensities that are more than 'nmads' from the median. 
@@ -28,6 +31,9 @@ outlierGate <- function(x, name, nmads=3, type=c("both", "upper", "lower"))
     rectangleGate(filterId=paste0(name, "_outlierGate"), .gate=gate) 
 }
 
+#' @export
+#' @importFrom stats lm
+#' @importFrom flowCore polygonGate
 dnaGate <- function(x, name1, name2, tol=0.5, nmads=3, type=c("both", "lower"), 
                     shoulder=FALSE, rank=1, ...)
 # Constructs a gate to remove non-cells, doublets, and
@@ -76,6 +82,7 @@ dnaGate <- function(x, name1, name2, tol=0.5, nmads=3, type=c("both", "lower"),
     polygonGate(filterId="dnaGate", .gate=all.vertices)
 }
 
+#' @importFrom stats density
 .get_LR_bounds <- function(x, nmads, shoulder, rank, ...) {
     dens <- density(x, ...)
     first.deriv <- diff(dens$y)
