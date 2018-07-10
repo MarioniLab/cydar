@@ -37,7 +37,6 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     # Creating a new object.
     output <- CyData(assays=list(counts=out.counts), colData=colData(x), metadata=metadata(x),
         rowData=DataFrame(cydar=I(DataFrame(intensities=I(out.coords), cellAssignments=I(ci), center.cell=chosen))))
-    output$totals <- tabulate(sample.id, ncol(x))
     metadata(output)$cydar$tol <- tol
 
     # Reordering for various historical reasons.

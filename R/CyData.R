@@ -10,19 +10,34 @@ setValidity2("CyData", function(object) {
     msg <- character(0)
         
     raw_sid <- .raw_sample_id(object)
+    Ncells <- length(raw_sid)
     if (is.null(raw_sid) || !all(raw_sid > 0L & raw_sid <= ncol(object))){ 
         msg <- c(msg, "missing or invalid sample IDs")
     }
 
-    raw_cin <- .raw_cellIntensities(object)
-    raw_markers <- markernames(object)
-    if (!identical(length(raw_markers), nrow(raw_cin))) {
+    used_cin <- .raw_cellIntensities(object)
+    used_markers <- markernames(object)
+    if (!identical(length(used_markers), nrow(used_cin))) {
         msg <- c(msg, "mismatch in number of markers and dimensionality of cell intensity matrix")
     }
 
+    unused_cin <- .raw_unusedIntensities(object)
+    unused_markers <- markernames(object, mode="unused")
+    if (!identical(length(unused_markers), nrow(unused_cin))) {
+        msg <- c(msg, "mismatch in number of markers and dimensionality of unused intensity matrix")
+    }
+
+    if (is.null(object$totals) || any(object$totals < 0L)) {
+        msg <- c(msg, "total number of cells per sample should be a positive integer")
+    }
+
     raw_cid <- .raw_sample_id(object)
-    if (is.null(raw_cid) || !all(raw_cid > 0L & raw_cid <= ncol(raw_cin))){ 
+    if (is.null(raw_cid) || !all(raw_cid > 0L & raw_cid <= object$totals[raw_sid])){ 
         msg <- c(msg, "missing or invalid cell IDs")
+    }
+
+    if (Ncells != length(raw_cid) || Ncells!=ncol(used_cin) || Ncells!=ncol(unused_cin)) {
+        msg <- c(msg, "number of cells is not consistent across fields of 'object'")
     }
 
     if (length(msg)) return(msg) 
@@ -94,6 +109,8 @@ setMethod("show", signature("CyData"), function(object) {
 
 .raw_cellIntensities <- function(x) .raw_precomputed(x)$data
 
+.raw_unusedIntensities <- function(x) .raw_metadata(x)$unused
+
 .raw_sample_id <- function(x) .raw_metadata(x)$sample.id
 
 .raw_cell_id <- function(x) .raw_metadata(x)$cell.id
@@ -140,11 +157,10 @@ setMethod("intensities", "CyData", function(x) {
 
 #' @export
 #' @importFrom flowCore markernames
-setMethod("markernames", "CyData", function(object, all=FALSE) {
-    mdf <- metadata(object)$cydar$markers
-    all.markers <- rownames(mdf)
-    if (!all) {
-        all.markers <- all.markers[mdf$used]
-    }
-    return(all.markers)
+setMethod("markernames", "CyData", function(object, mode=c("used", "all", "unused")) {
+    mode <- match.arg(mode)
+    mdata <- metadata(object)$cydar$markers
+    switch(mode, used=mdata$used,
+        unused=mdata$unused,
+        all=c(mdata$used, mdata$unused))
 })

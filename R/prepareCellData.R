@@ -14,7 +14,8 @@ prepareCellData <- function(x, markers=NULL, ...)
     exprs.list <- cell.data$exprs
 
     exprs <- do.call(rbind, exprs.list)
-    sample.id <- rep(seq_along(exprs.list), sapply(exprs.list, nrow))
+    ncells.per.sample <- vapply(exprs.list, FUN=nrow, FUN.VALUE=0L)
+    sample.id <- rep(seq_along(exprs.list), ncells.per.sample)
     cell.id <- unlist(lapply(exprs.list, FUN=function(exprs) seq_len(nrow(exprs)) ))
 
     # Picking markers to use.
@@ -25,11 +26,13 @@ prepareCellData <- function(x, markers=NULL, ...)
     output <- SummarizedExperiment(colData=DataFrame(row.names=sample.names))
     metadata(output)$cydar <- list(
         precomputed=reorg,
-        markers=DataFrame(row.names=marker.names, used=used),
+        markers=list(used=marker.names[used], unused=marker.names[!used]),
         sample.id=sample.id[reorg$order],
         cell.id=cell.id[reorg$order],
         unused=t(exprs[reorg$order,!used,drop=FALSE])
     )
+
+    output$totals <- ncells.per.sample
     as(output, "CyData")
 }
 
