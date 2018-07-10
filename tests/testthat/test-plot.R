@@ -44,4 +44,10 @@ test_that("intensityRanges works correctly", {
     ref <- apply(stuff$A, 2, quantile, p=c(0.05, 0.95))
     rownames(ref) <- c("min", "max")
     expect_equal(x, ref)
+
+    # Works when there are only a subset of markers in use.
+    cd <- prepareCellData(stuff, markers=c("X1", "X10"))
+    alt <- intensityRanges(cd, p=0.05)
+    expect_identical(x[,colnames(alt)], alt)
+    expect_identical(colnames(alt), markernames(cd, mode="all"))
 })

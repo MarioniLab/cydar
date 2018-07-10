@@ -20,13 +20,14 @@ The aim is to prevent extreme outliers from skewing the distribution of colours.
 This would result in loss of resolution at non-outlier values.
 
 Note that, while the bounds are defined at the quantiles \code{p} and \code{1-p}, the colour gradient will not be computed across the percentiles.
-That is, the "middle" of the gradient will not represent the median cell intensity.
+That is, the \dQuote{middle} of the gradient will not represent the median cell intensity.
 Rather, the colour gradient is computed from the lower and upper bounds, so the middle with represent the average of the bounds.
-In short, users should label the colour bar with the bounded intensities, rather than with the values of \code{p} or \code{1-p}.
+Users should label the colour bar with the bounded intensities, rather than with the values of \code{p} or \code{1-p}.
 }
 
 \value{
 A matrix specifying the lower and upper bounds (rows) on the intensity for each marker (columns).
+Markers used in distance calculations (see \code{markers} in \code{?\link{prepareCellData}}) are listed first, followed by the unused markers.
 }
 
 \author{
