@@ -1,37 +1,35 @@
+#' @export
+#' @importFrom shiny plotOutput reactiveValues fluidRow column textInput actionButton hr HTML htmlOutput selectInput
+#' pageWithSidebar headerPanel sidebarPanel h4 tableOutput sliderInput mainPanel renderPlot reactive renderTable
+#' observeEvent updateTextInput nearPoints updateSelectInput renderUI shinyApp runApp
+#' @importFrom flowCore markernames
 interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL, 
-                             metrics=NULL, num.per.row=6, plot.height=100, xlim=NULL, p=0.01, 
-                             red.coords=NULL, red.highlight=NULL, red.plot.height=500, 
-                             add.plot=NULL, add.plot.height=500, run=TRUE, ...)   
-# This creates a Shiny app to assist interpretation of the hyperspheres.
+    metrics=NULL, num.per.row=6, plot.height=100, xlim=NULL, p=0.01, 
+    red.coords=NULL, red.highlight=NULL, red.plot.height=500, 
+    add.plot=NULL, add.plot.height=500, run=TRUE, ...)   
+# Creates a Shiny app to assist interpretation of the hyperspheres.
 #
 # written by Aaron Lun
 # created 1 November 2016    
-# last modified 16 May 2017
 {
-    intvals <- intensities(x)
-    nrows <- ceiling(ncol(intvals)/num.per.row)
+    nrows <- ceiling(length(markernames(x, mode="all"))/num.per.row)
     plot.height <- plot.height*nrows
     collim <- intensityRanges(x, p=p)
     all.dens <- .prepareDensity(x, ...)
 
-    intvals <- as.matrix(intvals)
-    N <- nrow(intvals)
-    cell.int <- cellIntensities(x)
-    cell.assign <- cellAssignments(x)
-
     # Checking marker order.
-    if (!is.null(markers)) { 
-        m.order <- match(markers, colnames(intvals))
-        stopifnot(!any(is.na(m.order)))
-    } else {
-        m.order <- seq_len(ncol(intvals))
+    all.markers <- markernames(x, mode="all")
+    if (is.null(markers)) { 
+        markers <- all.markers 
+    } else if (!all(markers %in% all.markers)) {
+        stop("requested markers not present in available markers in 'x'")
     }
 
     # Checking hypersphere order.
     if (!is.null(select)) {
-       select <- .subsetToIndex(select, N, "select") 
+       select <- .subsetToIndex(select, nrow(x), "select") 
     } else {
-        select <- seq_len(N)
+        select <- seq_len(nrow(x))
     }
     if (length(select)==0L){ 
         stop("empty 'select' provided")
@@ -40,10 +38,10 @@ interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL,
     # Should we add a nav plot?
     if (!is.null(red.coords)) { 
         add.nav <- TRUE
-        stopifnot(identical(nrow(red.coords), N))
+        stopifnot(identical(nrow(red.coords), nrow(x)))
         stopifnot(identical(ncol(red.coords), 2L))
         if (!is.null(red.highlight)) {
-            red.highlight <- .subsetToIndex(red.highlight, N, "red.highlight")
+            red.highlight <- .subsetToIndex(red.highlight, nrow(x), "red.highlight")
         }
         red.coords <- data.frame(x=red.coords[,1], y=red.coords[,2])
     } else {
@@ -52,14 +50,14 @@ interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL,
 
     # Using existing labels if provided.
     if (is.null(labels)) {
-        labels <- character(N)
+        labels <- character(nrow(x))
     } else {
-        stopifnot(identical(length(labels), N))
+        stopifnot(identical(length(labels), nrow(x)))
     } 
 
     # Checking metrics if provided.
     if (!is.null(metrics)) {
-        stopifnot(identical(nrow(metrics), N))
+        stopifnot(identical(nrow(metrics), nrow(x)))
     }
 
     # Setting up the internal plotting and storage.
@@ -132,12 +130,12 @@ interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL,
 
     # Setting up the server actions.
     server <- function(input, output, session) {
-        reactiveHistPlot <- makeHistograms(input, N=N, mfrow=c(nrows, num.per.row), coords=intvals, density.data=all.dens, 
-            xlim=xlim, collim=collim, ordering=m.order, cell.int=cell.int, cell.assign=cell.assign, collected=collected)
+        reactiveHistPlot <- makeHistograms(input, mfrow=c(nrows, num.per.row), density.data=all.dens, 
+            xlim=xlim, collim=collim, collected=collected, markers=markers, x=x)
         output$histograms <- renderPlot({ reactiveHistPlot() })
 
         if (add.nav) {
-            reactiveNavPlot <- makeNavPlot(input, N=N, red.highlight=red.highlight, red.coords=red.coords, collected=collected)
+            reactiveNavPlot <- makeNavPlot(input, red.highlight=red.highlight, red.coords=red.coords, collected=collected)
             output$navplot <- renderPlot({ reactiveNavPlot() })
         }
 
@@ -146,21 +144,21 @@ interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL,
             output$addplots <- renderPlot({ reactiveAddPlot() })
         }
 
-        reactiveMetricTable <- makeMetricTable(input, N=N, metrics=metrics, collected=collected)
+        reactiveMetricTable <- makeMetricTable(input, metrics=metrics, collected=collected)
         output$metrics <- renderTable({
             reactiveMetricTable()
-        }, colnames=FALSE, sanitize.text.function=function(x) {x})
+        }, colnames=FALSE, sanitize.text.function=identity)
 
-        reactiveHistoryTable <- makeHistoryTable(input, N=N, collected=collected)
+        reactiveHistoryTable <- makeHistoryTable(input, collected=collected)
         output$history <- renderTable({ reactiveHistoryTable() })
 
-        reactiveClosestTable <- makeClosestTable(input, N=N, intvals=intvals, collected=collected)
+        reactiveClosestTable <- makeClosestTable(input, x=x, collected=collected)
         output$closest <- renderTable({ reactiveClosestTable() })
 
         # Setting up events to observe.
         observeEvent(input$gotonum, {
             current <- as.integer(input$gotonum)
-            if (is.na(current) || current < 1L || current > N) {
+            if (is.na(current) || current < 1L || current > nrow(x)) {
                 warning("specified index is not a number within range")
             } else {
                 collected$current <- current
@@ -212,7 +210,7 @@ interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL,
                 available <- setdiff(unique(collected$labels), "")
                 new.select <- intersect(input$labeltouse, available)
                 updateSelectInput(session, "labeltouse", choices=available, selected=new.select)
-                collected$more.labels <- labelSpheres(intvals, collected$labels)
+                collected$more.labels <- labelSpheres(x, collected$labels)
             })
 
             reactiveLabPlot <- makeLabPlot(input, red.coords, collected)
@@ -249,24 +247,27 @@ interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL,
 #######################################################
 # Setting up functions to return histograms.
 
-makeHistograms <- function(input, N, mfrow, ..., collected) {
+#' @importFrom graphics par
+makeHistograms <- function(input, mfrow, ..., x, collected) {
     reactive({
         extras <- as.integer(unlist(strsplit(input$extraplot, " ") ))    
         extras <- extras[!is.na(extras)]
-        invalid <- !is.finite(extras) | extras < 1L | extras > N
+        invalid <- !is.finite(extras) | extras < 1L | extras > nrow(x)
         if (any(invalid)) {    
             warning("indices out of range of number of hyperspheres")
             extras <- extras[!invalid]
         }
         par(mfrow=mfrow, mar=c(2.1, 1.1, 2.1, 1.1))
-        .generateDensity(..., current=collected$current, extras=extras, interval=input$intbar)
+        .generateDensity(..., x=x, current=collected$current, extras=extras, interval=input$intbar)
     })
 }
 
-makeNavPlot <- function(input, N, red.highlight, red.coords, collected) { 
+#' @importFrom shiny reactive
+#' @importFrom graphics plot par legend points
+makeNavPlot <- function(input, red.highlight, red.coords, collected) { 
     reactive({
         par(mar=c(5.1, 4.1, 1.1, 10.1))
-        col <- rep("grey", N)
+        col <- rep("grey", nrow(red.coords))
         if (!is.null(red.highlight)) {
             col[red.highlight] <- "orange"
         }
@@ -284,7 +285,8 @@ makeNavPlot <- function(input, N, red.highlight, red.coords, collected) {
     })
 }
 
-makeMetricTable <- function(input, N, metrics, collected) {
+#' @importFrom shiny reactive
+makeMetricTable <- function(input, metrics, collected) {
     reactive({ 
         current <- collected$current
         labels <- collected$labels
@@ -310,7 +312,8 @@ makeMetricTable <- function(input, N, metrics, collected) {
     })
 }
 
-makeHistoryTable <- function(input, N, collected) { 
+#' @importFrom shiny reactive
+makeHistoryTable <- function(input, collected) { 
     reactive({ 
         current <- collected$current
         if (is.na(collected$history[1]) || current!=collected$history[1]) { 
@@ -321,22 +324,28 @@ makeHistoryTable <- function(input, N, collected) {
     })
 }
 
-makeClosestTable <- function(input, N, intvals, collected) {
+#' @importFrom shiny reactive
+makeClosestTable <- function(input, x, collected) {
     reactive({
         labels <- collected$labels
         current <- collected$current
         is.anno <- setdiff(which(labels!=""), current)
+
         if (length(is.anno)) { 
+            intvals <- .raw_intensities(x)
             all.dist <- sqrt(colSums((t(intvals[is.anno,,drop=FALSE]) - intvals[current,])^2))
         } else {
             all.dist <- numeric(0)
         }
+
         o <- order(all.dist)[1:5]
         closest <- is.anno[o]
         data.frame(Distance=all.dist[o], Number=as.character(closest), Label=labels[closest])
     })
 }
 
+#' @importFrom shiny reactive
+#' @importFrom graphics plot plot.new points
 makeLabPlot <- function(input, red.coords, collected) {
     reactive({
         if (length(input$labeltouse)==0 || identical(input$labeltouse, "")) { 
@@ -368,40 +377,55 @@ makeLabPlot <- function(input, red.coords, collected) {
     return(subset)
 }
 
+#' @importFrom stats density 
+#' @importFrom flowCore markernames
 .prepareDensity <- function(x, ...) 
 # Computing the density once to speed up plotting.
+# Done separately for both the used and unused markers.
 { 
-    ci <- cellIntensities(x)
-    all.markers <- rownames(markerData(x))
-
-    collected <- vector("list", length(all.markers))
-    for (m in seq_along(all.markers)) {
-        cur.intensities <- ci[m,]
-        collected[[m]] <- density(cur.intensities, ...)
+    used.markers <- markernames(x)
+    used.int <- .raw_cellIntensities(x)
+    used.collected <- vector("list", length(used.markers))
+    for (m in seq_along(used.markers)) {
+        cur.intensities <- used.int[m,]
+        used.collected[[m]] <- density(cur.intensities, ...)
     }
+    names(used.collected) <- used.markers
 
-    names(collected) <- all.markers
-    return(collected)
+    unused.markers <- markernames(x, mode="unused")
+    unused.int <- .raw_unusedIntensities(x)
+    unused.collected <- vector("list", length(unused.markers))
+    for (m in seq_along(unused.markers)) {
+        cur.intensities <- unused.int[m,]
+        unused.collected[[m]] <- density(cur.intensities, ...)
+    }
+    names(unused.collected) <- unused.markers
+
+    c(used.collected, unused.collected)
 }
 
-.generateDensity <- function(coords, density.data, ordering, collim, xlim, current, extras, 
-                             interval, cell.int, cell.assign, ...) 
+#' @importFrom viridis viridis
+#' @importFrom stats approx quantile
+#' @importFrom graphics plot polygon lines points par text segments
+.generateDensity <- function(density.data, markers, collim, xlim, current, extras, interval, x, ...) 
 # Plotting the densities and adding the point corresponding to the current coordinates.
 {
-    current.coords <- coords[current,]
-    all.markers <- names(current.coords)
-    all.cols <- viridis(256)
+    all.cols <- viridis(100)
+    coords <- intensities(x)
+    used.markers <- markernames(x)
 
-    if (interval > 0) { 
-        interval <- interval/100
-        cur.assign <- unpackIndices(cell.assign[current])
-        cur.cell.int <- cell.int[,cur.assign[[1]],drop=FALSE]
-        half.left <- (1-interval)/2
-        prob.interval <- c(half.left, interval + half.left)
-    }
+    for (m in markers) {
+        was.used <- m %in% used.markers
 
-    for (m in ordering) {
-        curdex <- round(approx(collim[,m], c(1, 256), xout=current.coords[m], rule=2)$y)
+        # Defining the colour for used markers.
+        if (was.used) { 
+            curpos <- coords[current, m]
+            curdex <- round(approx(collim[,m], c(1, 100), xout=curpos, rule=2)$y)
+            curcol <- all.cols[curdex]
+        } else {
+            curcol <- "grey80"
+        }
+
         if (is.null(xlim)) { 
             xlim2 <- collim[,m]
         } else {
@@ -409,24 +433,38 @@ makeLabPlot <- function(input, red.coords, collected) {
         }
     
         curdens <- density.data[[m]]
-        plot(0, 0, type="n", xlab="", ylab="", yaxt="n", bty="n", main=all.markers[m], xlim=xlim2, ylim=c(0, max(curdens$y)), ...)
+        plot(0, 0, type="n", xlab="", ylab="", yaxt="n", bty="n", main=m, xlim=xlim2, ylim=c(0, max(curdens$y)), ...)
         my.x <- c(curdens$x[1]-10, curdens$x, curdens$x[length(curdens$x)]+10)
         my.y <- c(0, curdens$y, 0)
-        polygon(my.x, my.y, col=all.cols[curdex], border=NA)
+        polygon(my.x, my.y, col=curcol, border=NA)
         lines(my.x, my.y)
-    
-        curpos <- current.coords[m]
-        curpos <- pmin(xlim2[2], pmax(xlim2[1], curpos))
-        cury <- approx(my.x, my.y, curpos, rule=2)$y
-        par(xpd=TRUE)
-        points(curpos, cury, pch=16, col="red", cex=1.5)
+   
+        # Adding the point of the median intensity.
+        if (was.used) { 
+            curpos <- pmin(xlim2[2], pmax(xlim2[1], curpos))
+            cury <- approx(my.x, my.y, curpos, rule=2)$y
+            par(xpd=TRUE)
+            points(curpos, cury, pch=16, col="red", cex=1.5)
+        }
         
+        # Adding intervals specifying the spread of cells within this hypersphere.
         if (interval > 0) {
+            cur.assign <- .raw_cellAssignments(x)[[current]]
+            if (was.used) {
+                cur.cell.int <- .raw_cellIntensities(x)[match(m, used.markers), cur.assign, drop=FALSE]
+            } else {
+                unused.markers <- markernames(x, mode="unused")
+                cur.cell.int <- .raw_unusedIntensities(x)[match(m, unused.markers), cur.assign, drop=FALSE]
+            }
+
+            half.left <- (1-interval/100)/2
+            prob.interval <- c(half.left, interval/100 + half.left)
             q.int <- quantile(cur.cell.int[m,], prob.interval)
             segments(q.int[1], cury, q.int[2], col="red")
         }
 
-        if (length(extras)) { 
+        # Adding previous points for comparison.
+        if (length(extras) && was.used) {
             text(curpos, cury, pos=3, current, col="red")
             for (ex in extras) {
                 expos <- coords[ex,m]
@@ -442,6 +480,7 @@ makeLabPlot <- function(input, red.coords, collected) {
     return(invisible())
 }
 
+#' @importFrom grDevices rainbow
 .obtainColours <- function(labels) 
 # Generate colours.
 {
