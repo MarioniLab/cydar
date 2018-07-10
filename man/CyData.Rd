@@ -26,15 +26,15 @@
 
 \S4method{intensities}{CyData}(x)
 
-\S4method{markernames}{CyData}(object, all=FALSE)
+\S4method{markernames}{CyData}(object, mode=c("used", "all", "unused"))
 
 CyData(...)
 }
 
 \arguments{
 \item{x, object}{A CyData object.}
-\item{all}{A logical scalar indicating whether all marker names should be returned.
-By default, only the markers selected for use in \code{\link{prepareCellData}} are returned.}
+\item{mode}{String specifying the types of marker names that should be returned.
+By default, only the markers used for distance calculations are returned (i.e., set as \code{markers} in \code{\link{prepareCellData}}).}
 \item{...}{Arguments to be passed to the \code{\link{SummarizedExperiment}} constructor.}
 }
 
@@ -58,21 +58,16 @@ The \code{CyData} constructor returns a CyData object containing the specified i
 The \code{intensities} method returns a matrix of intensities for each group of cells (rows) and markers (columns).
 
 The \code{cellAssignments} method returns a list of integer vectors, where each vector contains the identities of the cells in a group.
+
+The \code{markernames} method returns a character vector of marker names, by default corresponding to the columns of the \code{intensities}.
 }
 
 \examples{
-# A minimal example.
-my.markers <- DataFrame(row.names=LETTERS)
-cyd.minimal <- CyData(markerData=my.markers)
+example(countCells, echo=FALSE)
 
-# Adding extra detail.
-counts <- matrix(rpois(1000, 10), ncol=10)
-medians <- matrix(rgamma(1000, 1, 1), ncol=10)
-cell.int <- matrix(rgamma(10000, 1, 1), nrow=10)
-marker.data <- DataFrame(row.names=LETTERS[1:10])
-cell.data <- DataFrame(sample.id=sample(10, 1000, replace=TRUE))
-cyd <- CyData(assay=counts, markerData=marker.data, cellData=cell.data,
-    intensities=medians, cellIntensities=cell.int)
+markernames(cnt)
+head(intensities(cnt))
+head(cellAssignments(cnt))
 }
 
 \author{
