@@ -405,7 +405,7 @@ makeLabPlot <- function(input, red.coords, collected) {
 }
 
 #' @importFrom viridis viridis
-#' @importFrom stats approx quantile
+#' @importFrom stats approx quantile median
 #' @importFrom graphics plot polygon lines points par text segments
 .generateDensity <- function(density.data, markers, collim, xlim, current, extras, interval, x, ...) 
 # Plotting the densities and adding the point corresponding to the current coordinates.
@@ -414,15 +414,26 @@ makeLabPlot <- function(input, red.coords, collected) {
     coords <- intensities(x)
     used.markers <- markernames(x)
 
+    unused.markers <- markernames(x, mode="unused")
+    used.int <- .raw_cellIntensities(x)
+    unused.int <- .raw_unusedIntensities(x)
+    sid <- .raw_sample_id(x)
+    cur.assign <- .raw_cellAssignments(x)[[current]]
+
     for (m in markers) {
         was.used <- m %in% used.markers
 
-        # Defining the colour for used markers.
+        # Defining the colour and position for (un)used markers.
+        # For unused markers, we take the mean of sample-wise medians, reflecting the linear modelling of the medians.
         if (was.used) { 
             curpos <- coords[current, m]
             curdex <- round(approx(collim[,m], c(1, 100), xout=curpos, rule=2)$y)
             curcol <- all.cols[curdex]
+            cur.cell.int <- used.int[match(m, used.markers), cur.assign, drop=FALSE]
         } else {
+            cur.cell.int <- unused.int[match(m, unused.markers), cur.assign, drop=FALSE]
+            by.sample <- split(cur.cell.int, sid[cur.assign])
+            curpos <- mean(vapply(by.sample, FUN=median, FUN.VALUE=0))
             curcol <- "grey80"
         }
 
@@ -440,23 +451,13 @@ makeLabPlot <- function(input, red.coords, collected) {
         lines(my.x, my.y)
    
         # Adding the point of the median intensity.
-        if (was.used) { 
-            curpos <- pmin(xlim2[2], pmax(xlim2[1], curpos))
-            cury <- approx(my.x, my.y, curpos, rule=2)$y
-            par(xpd=TRUE)
-            points(curpos, cury, pch=16, col="red", cex=1.5)
-        }
+        curpos <- pmin(xlim2[2], pmax(xlim2[1], curpos))
+        cury <- approx(my.x, my.y, curpos, rule=2)$y
+        par(xpd=TRUE)
+        points(curpos, cury, pch=16, col="red", cex=1.5)
         
         # Adding intervals specifying the spread of cells within this hypersphere.
         if (interval > 0) {
-            cur.assign <- .raw_cellAssignments(x)[[current]]
-            if (was.used) {
-                cur.cell.int <- .raw_cellIntensities(x)[match(m, used.markers), cur.assign, drop=FALSE]
-            } else {
-                unused.markers <- markernames(x, mode="unused")
-                cur.cell.int <- .raw_unusedIntensities(x)[match(m, unused.markers), cur.assign, drop=FALSE]
-            }
-
             half.left <- (1-interval/100)/2
             prob.interval <- c(half.left, interval/100 + half.left)
             q.int <- quantile(cur.cell.int[m,], prob.interval)
@@ -464,7 +465,7 @@ makeLabPlot <- function(input, red.coords, collected) {
         }
 
         # Adding previous points for comparison.
-        if (length(extras) && was.used) {
+        if (length(extras)) {
             text(curpos, cury, pos=3, current, col="red")
             for (ex in extras) {
                 expos <- coords[ex,m]
