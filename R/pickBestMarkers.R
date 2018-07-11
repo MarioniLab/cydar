@@ -1,4 +1,6 @@
-pickBestMarkers <- function(x, chosen, markers=NULL, downsample=10, p=0.05, naive=FALSE)
+#' @export
+#' @importFrom stats coef
+pickBestMarkers <- function(x, chosen, downsample=10, p=0.05)
 # The idea is to fit a binomial GLM to the coordinates, using the marker intensity as covariates 
 # and whether it belongs in the selected set as a response. We then calculate the contamination 
 # and recovery rate for each increasing set of markers, based on the number of points that fall
@@ -6,30 +8,24 @@ pickBestMarkers <- function(x, chosen, markers=NULL, downsample=10, p=0.05, naiv
 # 
 # written by Aaron Lun
 # created 10 June 2016
-# last modified 29 November 2016
 {
     .check_cell_data(x)
-    if (is.null(markers)) markers <- markerData(x)$used
-    used <- .chosen_markers(markers, markernames(x))
 
     # Figuring out which cells were counted.
-    cur.assignments <- cellAssignments(x)[chosen]
-    was.counted <- logical(nrow(cellData(x)))
-    for (g in cur.assignments) {
-        expanded <- unpackIndices(list(g))[[1]]
-        was.counted[expanded] <- TRUE
-    }
+    ci <- .raw_cellIntensities(x)
+    cur.assignments <- .raw_cellAssignments(x)[chosen]
+    was.counted <- logical(ncol(ci))
+    was.counted[unlist(cur.assignments)] <- TRUE
 
     # Downsampling cells for speed.
-    downsample <- as.integer(downsample)
-    selected <- ((cellData(x)$cell.id - 1L) %% downsample)==0L
-    coordinates <- t(cellIntensities(x)[used,selected,drop=FALSE])
+    selected <- .downsample(x, downsample)
+    coordinates <- t(ci[,selected,drop=FALSE])
     was.counted <- was.counted[selected]
     
     # Fitting a binomial GLM with LASSO.
     out <- glmnet::glmnet(coordinates, # as the marker intensities are the covariates.
-                          factor(was.counted), # response is whether it is in or not.
-                          family="binomial", intercept=TRUE)
+        factor(was.counted), # response is whether it is in or not.
+        family="binomial", intercept=TRUE)
 
     # Specifying the ranges with which we will count collections.
     inside <- coordinates[was.counted,,drop=FALSE]
