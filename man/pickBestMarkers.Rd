@@ -65,6 +65,7 @@ colnames(ex) <- paste0("X", seq_len(nmarkers))
 cd <- prepareCellData(list(A=ex))
 cnt <- countCells(cd, filter=1L)
 
-# Selecting the 1000th hypersphere.
-pickBestMarkers(cnt, chosen=1000)
+# Selecting all hyperspheres from one population.
+selected <- metadata(cnt)$cydar$precomputed$order[rowData(cnt)$cydar$center.cell] > nrow(ex1)
+pickBestMarkers(cnt, chosen=selected)
 }
