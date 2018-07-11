@@ -1,16 +1,18 @@
-<!--
-%\VignetteIndexEntry{Detecting differentially abundant subpopulations in mass cytometry data}
-%\VignettePackage{BiocStyle}
-%\VignetteEngine{knitr::knitr}
--->
+---
+title: Detecting differentially abundant subpopulations in mass cytometry data
+author: Aaron Lun
+package: cydar
+output: 
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Detecting differentially abundant subpopulations in mass cytometry data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
 
 ```{r, echo=FALSE, results="hide", message=FALSE}
 require(knitr)
 opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
-```
-
-```{r style, echo=FALSE, results='asis'}
-BiocStyle::markdown()
 ```
 
 ```{r setup, echo=FALSE, message=FALSE}
@@ -283,7 +285,7 @@ Colours represent to the median marker intensities of each hypersphere, mapped o
 ```{r,fig.width=10,fig.height=12}
 par(mfrow=c(6,5), mar=c(2.1, 1.1, 3.1, 1.1))
 limits <- intensityRanges(cd, p=0.05)
-all.markers <- rownames(markerData(cd))
+all.markers <- markernames(cd)
 for (i in order(all.markers)) { 
     plotCellIntensity(coords$x[,1], coords$x[,2], sig.coords[,i],
                       irange=limits[,i], main=all.markers[i])
