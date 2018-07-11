@@ -37,7 +37,6 @@ prepareCellData <- function(x, markers=NULL, ...)
 }
 
 #' @importFrom methods is
-#' @importClassesFrom ncdfFlow ncdfFlowSet
 #' @importFrom Biobase sampleNames 
 #' @importFrom BiocGenerics colnames
 #' @importFrom flowCore exprs

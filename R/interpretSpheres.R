@@ -1,8 +1,10 @@
 #' @export
 #' @importFrom shiny plotOutput reactiveValues fluidRow column textInput actionButton hr HTML htmlOutput selectInput
 #' pageWithSidebar headerPanel sidebarPanel h4 tableOutput sliderInput mainPanel renderPlot reactive renderTable
-#' observeEvent updateTextInput nearPoints updateSelectInput renderUI shinyApp runApp
+#' observeEvent updateTextInput nearPoints updateSelectInput renderUI shinyApp runApp br observe stopApp
 #' @importFrom flowCore markernames
+#' @importFrom utils tail
+#' @importFrom grDevices col2rgb
 interpretSpheres <- function(x, markers=NULL, labels=NULL, select=NULL, 
     metrics=NULL, num.per.row=6, plot.height=100, xlim=NULL, p=0.01, 
     red.coords=NULL, red.highlight=NULL, red.plot.height=500, 
@@ -486,6 +488,7 @@ makeLabPlot <- function(input, red.coords, collected) {
 # Generate colours.
 {
     all.colours <- rainbow(length(labels))
-    setNames(all.colours, labels)
+    names(all.colours) <- labels
+    all.colours
 }
 

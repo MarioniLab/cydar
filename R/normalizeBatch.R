@@ -142,7 +142,6 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
 
 #' @importClassesFrom flowCore flowSet
 #' @importFrom flowCore flowFrame normalization
-#' @importFrom flowStats warpSet
 #' @importFrom stats splinefun
 #' @importMethodsFrom BiocGenerics colnames<-
 #' @importMethodsFrom flowCore normalize
