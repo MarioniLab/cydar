@@ -75,8 +75,7 @@ Automated mapping of phenotype space with single-cell data.
 }
 
 \seealso{
-\code{\link{prepareCellData}},
-\code{\link{packIndices}}
+\code{\link{prepareCellData}}
 }
 \examples{
 example(prepareCellData, echo=FALSE)

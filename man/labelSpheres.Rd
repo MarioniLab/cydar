@@ -5,11 +5,13 @@
 \description{Given a set of labels for annotated hyperspheres, propagate labels to the surrounding unannotated hyperspheres.}
 
 \usage{
-labelSpheres(coords, labels)
+labelSpheres(x, labels)
 }
 
 \arguments{
-\item{coords}{A numeric matrix of hypersphere coordinates, containing the median intensity of each marker (column) in each hypersphere (row).}
+\item{x}{A numeric matrix of hypersphere coordinates, containing the median intensity of each marker (column) in each hypersphere (row).
+
+Alternatively, a CyData object containing median intensities for groups of cells, such as that produced by \code{\link{countCells}}.}
 \item{labels}{A character vector of labels for each hypersphere, set to an empty string for unannotated hyperspheres.}
 }
 
