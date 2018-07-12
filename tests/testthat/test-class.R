@@ -27,11 +27,11 @@ test_that("CyData getters work as expected", {
     chosen <- c("X1", "X2")
     cd <- prepareCellData(list(all.values1, all.values2), markers=chosen)
     expect_identical(markernames(cd), chosen)
-    expect_identical(markernames(cd, all=TRUE), colnames(all.values1))
+    expect_identical(markernames(cd, mode="all"), colnames(all.values1))
 
     cn <- countCells(cd)
     expect_identical(markernames(cn), chosen)
-    expect_identical(markernames(cn, all=TRUE), colnames(all.values1))
+    expect_identical(markernames(cn, mode="all"), colnames(all.values1))
 })
 
 test_that("CyData column methods trigger warnings", {

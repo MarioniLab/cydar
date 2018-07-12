@@ -26,7 +26,7 @@ test_that("medIntensities works as expected", {
     sample.ids <- rep(c("A", "B"), c(ncells1, ncells2))
 
     for (u in which(!to.use)) { 
-        cur.assay <- assay(rcnt, paste0("med.", markernames(rcnt, all=TRUE)[u]))
+        cur.assay <- assay(rcnt, paste0("med.", markernames(rcnt, mode="all")[u]))
         ref.assay <- matrix(NA_real_, length(ref.groups), ncol(rcnt))
         colnames(ref.assay) <- colnames(rcnt)
 

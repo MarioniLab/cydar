@@ -55,7 +55,7 @@ test_that("prepareCellData works with subsetted markers", {
 
     tmp.sub <- metadata(out.sub)$cydar
     tmp.ref <- metadata(out.ref)$cydar
-    expect_identical(tmp.sub$markers[tmp.sub$markers$used,,drop=FALSE], tmp.ref$markers)
+    expect_identical(tmp.sub$markers$used, tmp.ref$markers$used)
     tmp.sub$unused <- NULL
     tmp.ref$unused <- NULL
     tmp.sub$markers <- NULL
