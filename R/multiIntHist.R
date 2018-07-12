@@ -13,7 +13,7 @@ multiIntHist <- function(collected, cols=NULL, xlab="Intensity", ylab="Density",
         cols <- rep(cols, length.out=length(collected))
     }
     
-    max.x <- max(sapply(collected, max))
+    max.x <- max(vapply(collected, FUN=max, FUN.VALUE=0))
     breaks <- seq(from=0, to=max.x, length.out=50)
     h.all <- h.zero <- vector("list", length(collected))
     for (batch in seq_along(collected)) {
@@ -26,7 +26,7 @@ multiIntHist <- function(collected, cols=NULL, xlab="Intensity", ylab="Density",
         h.zero[[batch]] <- sum(is.zero)/length(is.zero)
     }
 
-    max.y <- max(sapply(h.all, FUN=function(incoming) max(incoming$density)))
+    max.y <- max(vapply(h.all, FUN=function(incoming) max(incoming$density), FUN.VALUE=0))
     max.y <- max(max.y, unlist(h.zero))
     plot(0,0,type="n", xlab=xlab, ylab=ylab, xlim=c(0, max.x), ylim=c(0, max.y), ...)
     for (batch in seq_along(collected)) {

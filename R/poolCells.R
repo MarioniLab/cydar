@@ -12,7 +12,7 @@ poolCells <- function(x, equalize=TRUE, n=NULL)
     cell.data <- .pull_out_data(x)
 
     if (equalize) { 
-        if (is.null(n)) n <- min(sapply(cell.data$exprs, nrow))
+        if (is.null(n)) n <- min(vapply(cell.data$exprs, FUN=nrow, FUN.VALUE=0L))
         n <- as.integer(n)
         if (n <= 0L) stop("'n' must be a positive integer")
         for (s in seq_along(cell.data$samples)) {

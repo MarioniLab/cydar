@@ -314,12 +314,14 @@ makeMetricTable <- function(input, metrics, collected) {
     })
 }
 
+history_len <- 5
+
 #' @importFrom shiny reactive
 makeHistoryTable <- function(input, collected) { 
     reactive({ 
         current <- collected$current
         if (is.na(collected$history[1]) || current!=collected$history[1]) { 
-            collected$history <- c(current, collected$history)[1:5]
+            collected$history <- c(current, collected$history)[seq_len(history_len)]
         }
         data.frame(Number=as.character(collected$history),
             Label=collected$labels[collected$history])
@@ -340,7 +342,7 @@ makeClosestTable <- function(input, x, collected) {
             all.dist <- numeric(0)
         }
 
-        o <- order(all.dist)[1:5]
+        o <- order(all.dist)[seq_len(history_len)]
         closest <- is.anno[o]
         data.frame(Distance=all.dist[o], Number=as.character(closest), Label=labels[closest])
     })
