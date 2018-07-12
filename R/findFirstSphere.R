@@ -1,7 +1,7 @@
 #' @export
 #' @importFrom kmknn findNeighbors precluster
 #' @importFrom methods is
-findFirstSphere <- function(x, pvalues, threshold=1, block=NULL, naive=FALSE)
+findFirstSphere <- function(x, pvalues, threshold=1, block=NULL)
 # Returns a logical vector indicating which hyperspheres are redundant
 # within the specified distance threshold.
 #
@@ -25,7 +25,7 @@ findFirstSphere <- function(x, pvalues, threshold=1, block=NULL, naive=FALSE)
         by.block <- split(seq_along(block), block)
         total.out <- logical(length(block))
         for (b in by.block) {
-            total.out[b] <- Recall(x[b,,drop=FALSE], pvalues[b], threshold=threshold, block=NULL, naive=naive)
+            total.out[b] <- Recall(x[b,,drop=FALSE], pvalues[b], threshold=threshold, block=NULL)
         }
         return(total.out)
     }
