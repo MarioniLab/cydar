@@ -10,11 +10,10 @@ medIntensities <- function(x, markers)
 # created 2 December 2016
 {
     .check_cell_data(x)
-    all.markers <- markernames(x, all=TRUE)
+    all.markers <- markernames(x, mode="all")
     selected <- all.markers[.chosen_markers(markers, all.markers)]
     
-    mdata <- metadata(x)$cydar$markers
-    all.leftovers <- rownames(mdata)[!mdata$used]
+    all.leftovers <- markernames(x, mode="unused")
     if (!all(selected %in% all.leftovers)) {
         stop("markers used for counting cannot be used for computing median intensities")
     }
