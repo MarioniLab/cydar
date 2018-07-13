@@ -118,8 +118,6 @@ setMethod("show", signature("CyData"), function(object) {
 #' @importFrom SummarizedExperiment rowData
 .raw_rowdata <- function(x) rowData(x)$cydar
 
-.raw_center_cell <- function(x) .raw_rowdata(x)$center.cell
-
 .raw_cellAssignments <- function(x) .raw_rowdata(x)$cellAssignments
 
 .raw_intensities <- function(x) .raw_rowdata(x)$intensities
@@ -164,3 +162,35 @@ setMethod("markernames", "CyData", function(object, mode=c("used", "all", "unuse
         unused=mdata$unused,
         all=c(mdata$used, mdata$unused))
 })
+
+#' @export
+#' @importFrom flowCore markernames
+cellIntensities <- function(x, mode=c("used", "all", "unused")) {
+    mode <- match.arg(mode)
+    if (mode=="used") {
+        val <- .raw_cellIntensities(x)
+    } else if (mode=="all") {
+        val <- rbind(.raw_cellIntensities(x), .raw_unusedIntensities(x))
+    } else {
+        val <- .raw_unusedIntensities(x)
+    }
+ 
+    rownames(val) <- markernames(x, mode=mode)
+    return(val) 
+}
+
+#' @export
+#' @importFrom S4Vectors DataFrame
+cellInformation <- function(x) {
+    DataFrame(sample=.raw_sample_id(x), row=.raw_cell_id(x))
+}
+
+#' @export
+getCenterCell <- function(x) {
+    out <- .raw_rowdata(x)$center.cell
+    if (is.null(out)) {
+        stop("center cell not available, run 'countCells()'")
+    }
+    names(out) <- rownames(x)
+    out
+}
