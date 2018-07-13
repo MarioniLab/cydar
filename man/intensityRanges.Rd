@@ -43,9 +43,10 @@ Aaron Lun
 example(prepareCellData, echo=FALSE) # Using the mocked-up data set.
 bounds <- intensityRanges(cd)
 
-# Plotting example (using a subset for speed).
-cd.subset <- t(metadata(cd)$cydar$precomputed$data[,1:1000])
+# Plotting example (using a subset for fast PCA).
+cd.subset <- t(cellIntensities(cd)[,1:1000])
 coords <- prcomp(cd.subset)
+
 chosen.marker <- 5
 plotCellIntensity(coords$x[,1], coords$x[,2], 
     intensity=cd.subset[chosen.marker,], 

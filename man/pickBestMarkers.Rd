@@ -66,6 +66,7 @@ cd <- prepareCellData(list(A=ex))
 cnt <- countCells(cd, filter=1L)
 
 # Selecting all hyperspheres from one population.
-selected <- metadata(cnt)$cydar$precomputed$order[rowData(cnt)$cydar$center.cell] > nrow(ex1)
+second.pop <- cellInformation(cnt)$row > nrow(ex1)
+selected <- second.pop[getCenterCell(cnt)]
 pickBestMarkers(cnt, chosen=selected)
 }
