@@ -16,11 +16,6 @@
         stop("'cellAssignments' should be a list, please run 'countCells()'")
     }
 
-    raw_cc <- .raw_center_cell(x)
-    if (is.null(raw_cc)) {
-        stop("missing 'center.cell' in 'rowData(x)', please run 'countCells()'")        
-    }
-
     invisible(NULL)
 }
 
