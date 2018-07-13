@@ -28,10 +28,45 @@ test_that("CyData getters work as expected", {
     cd <- prepareCellData(list(all.values1, all.values2), markers=chosen)
     expect_identical(markernames(cd), chosen)
     expect_identical(markernames(cd, mode="all"), colnames(all.values1))
+    expect_identical(markernames(cd, mode="unused"), setdiff(colnames(all.values1), chosen))
 
     cn <- countCells(cd)
     expect_identical(markernames(cn), chosen)
     expect_identical(markernames(cn, mode="all"), colnames(all.values1))
+    expect_identical(markernames(cn, mode="unused"), setdiff(colnames(all.values1), chosen))
+})
+
+test_that("CyData cell information getters work as expected", {
+    # Testing cellIntensities().
+    cd <- prepareCellData(list(all.values1, all.values2))
+    cn <- countCells(cd, filter=1)
+
+    out <- cellIntensities(cd)
+    expect_identical(out, cellIntensities(cn))
+    expect_identical(out, cellIntensities(cn, mode="all"))
+    expect_identical(dim(cellIntensities(cn, mode="unused")), c(0L, ncol(out)))
+
+    chosen <- c("X2", "X7", "X8")
+    cd2 <- prepareCellData(list(all.values1, all.values2), markers=chosen)
+
+    out2 <- cellIntensities(cd2)
+    ref <- t(rbind(all.values1, all.values2))[,metadata(cd2)$cydar$precomputed$order]
+    expect_identical(out2, ref[chosen,])
+    unused <- setdiff(rownames(ref), chosen)
+    expect_identical(cellIntensities(cd2, mode="all"), ref[c(chosen, unused),])
+    expect_identical(cellIntensities(cd2, mode="unused"), ref[unused,])
+
+    # Testing cellInformation().
+    info <- cellInformation(cd)
+    expect_identical(nrow(info), ncol(out))
+    expect_identical(info$sample, rep(1:2, c(ncells1, ncells2))[metadata(cd)$cydar$precomputed$order])
+    expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2))[metadata(cd)$cydar$precomputed$order])
+
+    # Testing getCenterCell().
+    centers <- getCenterCell(cn)
+    index <- info$row[centers]
+    expect_true(all(index%%10==1L))
+    expect_error(getCenterCell(cd), "not available")
 })
 
 test_that("CyData column methods trigger warnings", {
