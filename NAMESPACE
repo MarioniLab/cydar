@@ -2,10 +2,13 @@
 
 export(CyData)
 export(cellAssignments)
+export(cellInformation)
+export(cellIntensities)
 export(countCells)
 export(dnaGate)
 export(expandRadius)
 export(findFirstSphere)
+export(getCenterCell)
 export(intensities)
 export(intensityRanges)
 export(interpretSpheres)
