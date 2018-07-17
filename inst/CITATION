@@ -1,0 +1,12 @@
+citEntry(
+    entry = "article",
+    author ="Aaron T L Lun and Arianne C Richard and John C Marioni",
+    title="Testing for differential abundance in mass cytometry data",
+    journal="Nat. Methods",
+    year="2017",
+    volume="14",
+    issue="7",
+    pages="707-709",
+    textVersion = "Lun ATL, Richard AC and Marioni JC (2016). Testing for differential abundance in mass cytometry data. Nat. Methods 14(7), 707-709"
+)
+
