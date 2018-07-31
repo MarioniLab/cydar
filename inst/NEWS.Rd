@@ -2,7 +2,17 @@
 \title{cydar News}
 \encoding{UTF-8}
 
-\section{Version 1.3.1}{\itemize{
+\section{Version 1.5.3}{\itemize{
+\item Restructured the CyData class for simplicity.
+
+\item Deprecated plotCell* functions, renamed them to plotSphere*.
+
+\item Added the createColorBar() convenience function.
+
+\item Removed the diffIntDist() function.
+}}
+
+\section{Version 1.4.0}{\itemize{
 \item Bug fix to interpreSpheres() when making additional plots.
 
 \item Switched to custom colour calculation in plotCellIntensity().
