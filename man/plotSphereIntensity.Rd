@@ -1,5 +1,5 @@
-\name{Plot Cells}
-\alias{plotCellLogFC}
+\name{plotSphereIntensity}
+\alias{plotSphereIntensity}
 \alias{plotCellIntensity}
 
 \title{Plot cell or hypersphere data}
