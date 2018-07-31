@@ -42,8 +42,7 @@ Aaron Lun
 }
 
 \seealso{
-\code{\link{viridis}},
-\code{\link{intensityRanges}}
+\code{\link{createColorBar}}
 }
 
 \examples{

@@ -32,7 +32,7 @@ Users should consider using \code{\link{intensityRanges}} to define appropriate 
 A plot of the low-dimensional embedding of the hypersphere locations is made on the current graphics device.
 A vector of colours of length \code{length.out} is returned, containing the colour gradient used for the intensities.
 The vector names contains the numeric values associated with each colour.
-This can be used to construct a colour bar.
+This can be used to construct a colour bar with \code{\link{createColorBar}}.
 }
 
 \author{
@@ -41,7 +41,8 @@ Aaron Lun
 
 \seealso{
 \code{\link{viridis}},
-\code{\link{intensityRanges}}
+\code{\link{intensityRanges}},
+\code{\link{createColorBar}}
 }
 
 \examples{
