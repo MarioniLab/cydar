@@ -14,7 +14,7 @@ createColorBar <- function(colors, top.text=NULL, bottom.text=NULL, lower=-0.5, 
         top.text <- tail(names(colors), 1L)
     } 
     if (!is.null(top.text)) {
-        text(x.pos, lower, pos=1, top.text, cex=cex)
+        text(x.pos, upper, pos=3, top.text, cex=cex)
     }
 
     if (is.null(bottom.text)) {
