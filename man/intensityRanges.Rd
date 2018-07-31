@@ -36,7 +36,7 @@ Aaron Lun
 
 \seealso{
 \code{\link{prepareCellData}},
-\code{\link{plotCellIntensity}}
+\code{\link{plotSphereIntensity}}
 }
 
 \examples{
@@ -48,7 +48,7 @@ cd.subset <- t(cellIntensities(cd)[,1:1000])
 coords <- prcomp(cd.subset)
 
 chosen.marker <- 5
-plotCellIntensity(coords$x[,1], coords$x[,2], 
+plotSphereIntensity(coords$x[,1], coords$x[,2], 
     intensity=cd.subset[chosen.marker,], 
     irange=bounds[,chosen.marker])
 }
