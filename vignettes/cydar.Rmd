@@ -275,11 +275,11 @@ We can see that we've recovered the two DA subpopulations that we put in at the 
 One subpopulation increases in abundance (red) while the other decreases (blue) in the second condition relative to the first.
 
 ```{r}
-plotCellLogFC(coords$x[,1], coords$x[,2], sig.res$logFC)
+plotSphereLogFC(coords$x[,1], coords$x[,2], sig.res$logFC)
 ```
 
 This plot should be interpreted by examining the marker intensities, in order to determine what each area of the plot represents. 
-We suggest using the `plotCellIntensity` function to make a series of plots for all markers, as shown below.
+We suggest using the `plotSphereIntensity` function to make a series of plots for all markers, as shown below.
 Colours represent to the median marker intensities of each hypersphere, mapped onto the `r CRANpkg("viridis")` colour scale.
 
 ```{r,fig.width=10,fig.height=12}
@@ -287,8 +287,8 @@ par(mfrow=c(6,5), mar=c(2.1, 1.1, 3.1, 1.1))
 limits <- intensityRanges(cd, p=0.05)
 all.markers <- markernames(cd)
 for (i in order(all.markers)) { 
-    plotCellIntensity(coords$x[,1], coords$x[,2], sig.coords[,i],
-                      irange=limits[,i], main=all.markers[i])
+    plotSphereIntensity(coords$x[,1], coords$x[,2], sig.coords[,i],
+        irange=limits[,i], main=all.markers[i])
 }
 ```
 
@@ -296,7 +296,7 @@ We use the `intensityRanges` function to define the bounds of the colour scale.
 This caps the minimum and maximum intensities at the 5^th^ and 95^th^ percentiles, respectively, to avoid colours being skewed by outliers.
 
 Note that both of these functions return a vector of colours, named with the corresponding numeric value of the log-fold change or intensity.
-This can be used to construct a colour bar -- see `?plotCellLogFC` for more details.
+This can be used to construct a colour bar -- see `?plotSphereLogFC` for more details.
 
 ## Using a Shiny app
 
