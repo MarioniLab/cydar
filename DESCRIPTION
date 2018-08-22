@@ -1,6 +1,6 @@
 Package: cydar
-Version: 1.5.3
-Date: 2018-07-31
+Version: 1.5.4
+Date: 2018-08-22
 Title: Using Mass Cytometry for Differential Abundance Analyses
 Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
