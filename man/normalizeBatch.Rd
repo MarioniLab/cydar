@@ -17,7 +17,7 @@ Also can be \code{NULL}, see below.
 }
 \item{mode}{
 A string or character vector of length equal to the number of markers, specifying whether range-based or warping normalization should be performed for each marker.
-This can take values of \code{"range"}, \code{"warp"} or \code{"none"} (in which case no normalization is performed).
+This can take values of \code{"range"}, \code{"warp"}, \code{"quantile"} or \code{"none"} (in which case no normalization is performed).
 }
 \item{p}{A numeric scalar between 0 and 0.5, specifying the percentile used to define the range of the distribution for range-based normalization.}
 \item{target}{An integer scalar indicating the reference batch.}
@@ -34,13 +34,16 @@ The process for each marker is as follows:
 The composition of each batch can be specified by \code{batch.comp}, see below for more details.
 The weighted intensities for each batch represents the pooled distribution of intensities from all samples in that batch.
 \item If \code{mode="range"}, a quantile function is constructed for the pooled distribution of each batch.
-These functions are averaged across batches to obtain a reference quantile function, representing a reference distribution.
+These functions are averaged across batches to obtain a reference quantile function (if \code{target=NULL}), representing a reference distribution.
 The range of the reference distribution is computed at percentiles \code{p} and \code{1-p} (to avoid distortions due to outliers).
 A batch-specific scaling function is defined to equalize the range of the weighted distribution of intensities from each batch to the reference range.
+\item If \code{mode="quantile"}, a quantile function is constructed as described above.
+The average of these quantile functions is used to define a reference distribution, assuming that \code{target=NULL}.
+A batch-specific transformation function is defined to convert the quantiles for each batch to the corresponding quantiles of the reference.
 \item If \code{mode="warp"}, weighted sampling from each pooled distribution is performed to generate a pseudo-sample for each batch.
 This is used to construct a flowSet for use in warping normalization - see \code{?\link{normalization}} and \code{?\link[flowStats]{warpSet}} for details.
 A warping function is computed for each batch that adjust the intensity distribution to be more similar to the reference (constructed by averaging across batches).
-\item The scaling or warping function is applied to the intensities of all samples in that batch, yielding corrected intensities for direct comparisons between samples.
+\item The transformation function is applied to the intensities of \emph{all} samples in that batch, yielding corrected intensities for direct comparisons between samples.
 }
 
 Groupings can be specified as batch-specific factors in \code{batch.comp}, with at least one common group required across all batches.
@@ -55,7 +58,7 @@ However, note that the adjustment may not be accurate if the to-be-corrected int
 
 By default, the reference distribution for each marker is defined as an average of the relevant statistic across batches.
 If \code{target} is not \code{NULL}, the specified batch will be used as the reference distribution.
-This means that if \code{mode="range"}, the reference quantile function will be defined as the quantile function of the chosen batch.
+This means that if \code{mode="range"} or \code{mode="quantile"}, the reference quantile function will be defined as the quantile function of the chosen batch.
 Similarly, if \code{mode="warp"}, \code{\link[flowStats]{warpSet}} will align all other batches to the locations of the peaks in \code{target}.
 
 All markers are used by default when \code{markers=NULL}.
@@ -71,10 +74,17 @@ Note that a batch effect should still be included in the design matrix when mode
 Warping normalization can be more powerful than range-based normalization, as the former can eliminate non-linear changes to the intensities whereas the latter cannot.
 However, it requires that landmarks in the intensity distribution (i.e., peaks) be easily identifiable and consistent across batches. 
 Large differences (e.g., a peak present in one batch and absent in another) may lead to incorrect adjustments.
-
 Such differences may be present when batches are confounded with uninteresting biological factors (e.g., individual, mouse of origin) that affect cell abundance. 
 In such cases, range-based normalization with \code{mode="range"} is recommended as it is more constrained in how the intensities are adjusted.
 This reduces the risk of distorting the intensities, albeit at the cost of \dQuote{under-normalizing} the data.
+
+Quantile normalization is the most powerful of these methods but also requires the strongest assumptions.
+In particular, it requires that the composition of samples in shared groups is \emph{exactly} the same across all batches.
+This is only practically applicable to experimental designs where the same control sample has been used in multiple batches.
+In such cases, users should set all control samples to the same \dQuote{group} in \code{batch.comp}, 
+while all other samples should be set to batch-specific groups (and are thus ignored during calculation of the transformation functions).
+Note that this approach also requires the control samples to cover the range of intensities in the other samples, 
+otherwise the transformation function will need to extrapolate - often badly.
 
 It is advisable to inspect the intensity distributions before and after normalization, to ensure that the methods have behaved appropriately.
 This can be done by constructing histograms for each marker with \code{\link{multiIntHist}}.
