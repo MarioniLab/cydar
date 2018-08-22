@@ -135,20 +135,21 @@ test_that("Marker data extraction works as expected", {
 
 ###########################################################
 
-test_that("Range-based normalization functions are correct", {
-    weighted.quantile <- function(obs, wts, p) {
-        o <- order(obs)
-        wts <- wts[o]
-        obs <- obs[o]
-        mid.cum.weight <- cumsum(wts) - wts/2
-        total.weight <- sum(wts)
-        approx(mid.cum.weight/total.weight, obs, xout=p, rule=2)$y
-    }
+weighted.quantile <- function(obs, wts, p) {
+    o <- order(obs)
+    wts <- wts[o]
+    obs <- obs[o]
+    mid.cum.weight <- cumsum(wts) - wts/2
+    total.weight <- sum(wts)
+    approx(mid.cum.weight/total.weight, obs, xout=p, rule=2)$y
+}
 
-    # Putting together observations.
+test_that("Range-based normalization functions are correct", {
+    # Putting together observations for marker 2.
     nbatches <- length(batch.out)
     M <- 2
-    all.obs <- vector("list", nbatches)
+    
+    all.wts <- all.obs <- vector("list", nbatches)
     for (b in seq_len(nbatches)) { 
         cur.out <- batch.out[[b]]
         nsamples <- length(cur.out$exprs)
@@ -158,27 +159,62 @@ test_that("Range-based normalization functions are correct", {
             cur.obs[[s]] <- cur.out$exprs[[s]][,M]
         }
         all.obs[[b]] <- unlist(cur.obs)
+        all.wts[[b]] <- rep(test.wts[[b]], lengths(cur.obs))
     }
 
-    Q <- mapply(weighted.quantile, all.obs, test.wts, MoreArgs=list(p=c(0.01, 0.99)))
-    all.FUN <- cydar:::.rescaleDistr(all.obs, test.wts, target=NULL, p=0.01)
+    # Testing with target=NULL.
+    Q <- mapply(weighted.quantile, all.obs, all.wts, MoreArgs=list(p=c(0.01, 0.99)))
+    all.FUN <- cydar:::.rescaleDistr(all.obs, all.wts, target=NULL, p=0.01)
     for (b in seq_len(nbatches)) { 
         expect_equal(rowMeans(Q), all.FUN[[b]](Q[,b]))
     }
 
-    Q <- mapply(weighted.quantile, all.obs, test.wts, MoreArgs=list(p=c(0.05, 0.95)))
-    all.FUN <- cydar:::.rescaleDistr(all.obs, test.wts, target=NULL, p=0.05)
+    Q <- mapply(weighted.quantile, all.obs, all.wts, MoreArgs=list(p=c(0.05, 0.95)))
+    all.FUN <- cydar:::.rescaleDistr(all.obs, all.wts, target=NULL, p=0.05)
     for (b in seq_len(nbatches)) { 
         expect_equal(rowMeans(Q), all.FUN[[b]](Q[,b]))
     }
 
     # With target set.
-    Q <- mapply(weighted.quantile, all.obs, test.wts, MoreArgs=list(p=c(0.05, 0.95)))
-    all.FUN <- cydar:::.rescaleDistr(all.obs, test.wts, target=2, p=0.05)
+    Q <- mapply(weighted.quantile, all.obs, all.wts, MoreArgs=list(p=c(0.05, 0.95)))
+    all.FUN <- cydar:::.rescaleDistr(all.obs, all.wts, target=2, p=0.05)
     for (b in seq_len(nbatches)) { 
         expect_equal(Q[,2], all.FUN[[b]](Q[,b]))
     }
 })
+
+test_that("Quantile normalization functions are correct", {
+    # Putting together observations for marker 8.
+    nbatches <- length(batch.out)
+    M <- 8
+    all.wts <- all.obs <- vector("list", nbatches)
+    for (b in seq_len(nbatches)) { 
+        cur.out <- batch.out[[b]]
+        nsamples <- length(cur.out$exprs)
+        
+        cur.obs <- vector("list", nsamples)
+        for (s in seq_len(nsamples)) { 
+            cur.obs[[s]] <- cur.out$exprs[[s]][,M]
+        }
+        all.obs[[b]] <- unlist(cur.obs)
+        all.wts[[b]] <- rep(test.wts[[b]], lengths(cur.obs))
+    }
+
+    # Testing with target=NULL (needs a higher tol as it only exactly matches at approx() coordinates).
+    Q <- mapply(weighted.quantile, all.obs, all.wts, MoreArgs=list(p=1:99/100))
+    all.FUN <- cydar:::.quantileDistr(all.obs, all.wts, target=NULL)
+    for (b in seq_len(nbatches)) { 
+        expect_equal(rowMeans(Q), all.FUN[[b]](Q[,b]), tol=1e-4)
+    }
+
+    # With target set.
+    all.FUN <- cydar:::.quantileDistr(all.obs, all.wts, target=3)
+    for (b in seq_len(nbatches)) { 
+        expect_equal(Q[,3], all.FUN[[b]](Q[,b]), tol=1e-4)
+    }
+})
+
+###########################################################
 
 test_that("Overall normalization function does its job", {
     get.meanvar <- function(stuff) {
@@ -200,6 +236,11 @@ test_that("Overall normalization function does its job", {
     expect_identical(lapply(unlist(all.x, recursive=FALSE), colnames), lapply(post.xrU, colnames))
 
     newV <- get.meanvar(post.xr)
+    expect_true(all(oldV > newV))
+
+    # Repeating with quantile normalization, using only the first two markers for speed.
+    post.xq <- normalizeBatch(all.x, batch.comp, mode="quantile")
+    newV <- get.meanvar(post.xq)
     expect_true(all(oldV > newV))
 
     # Repeating with warping, using only the first two markers for speed.
