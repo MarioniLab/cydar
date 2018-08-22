@@ -10,8 +10,6 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     if (is.null(batch.comp)) {
         batch.comp <- lapply(batch.x, function(i) rep(1, length(i)))
     }
-    all.levels <- unique(unlist(batch.comp))
-    batch.comp <- lapply(batch.comp, factor, levels=all.levels)
     nbatches <- length(batch.x)
     if (nbatches!=length(batch.comp)) {
         stop("length of 'batch.x' and 'batch.comp' must be identical")
@@ -56,6 +54,7 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
 
     # Calculating weights.
     batch.weights <- .computeCellWeights(batch.out, batch.comp)
+    EXTRACTOR <- .pullOutMarkers(batch.out, batch.weights)
 
     # Setting up an output object.
     output <- vector("list", nbatches)
@@ -74,29 +73,21 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     names(output) <- names(batch.x)
 
     for (m in ref.markers) {
-        # Putting together observations.
-        all.obs <- vector("list", nbatches)
-        for (b in seq_len(nbatches)) { 
-            cur.out <- batch.out[[b]]
-            nsamples <- length(cur.out$exprs)
-
-            cur.obs <- vector("list", nsamples)
-            for (s in seq_len(nsamples)) { 
-                cur.obs[[s]] <- cur.out$exprs[[s]][,m]
-            }
-            all.obs[[b]] <- unlist(cur.obs)
-        }
+        for.norm <- EXTRACTOR(m)
+        all.obs <- for.norm$exprs
+        all.wts <- for.norm$weights
         
+        # Choosing the normalization method.
         curmode <- match.arg(mode[m], c("none", "range", "warp"))
         if (curmode=="none") {
-            # Skipping normalization. 
             ;
         } else if (curmode=="warp") { 
-            # Performing warp-based normalization to a reference.
-            converters <- .transformDistr(all.obs, batch.weights, m, target=target, ...)
+            converters <- .transformDistr(all.obs, all.wts, m, target=target, ...)
         } else if (curmode=="range") {
-            converters <- .rescaleDistr(all.obs, batch.weights, target=target, p=p)
+            converters <- .rescaleDistr(all.obs, all.wts, target=target, p=p)
         }
+
+        # Applying the normalization method.
         for (b in seq_len(nbatches)) { 
             converter <- converters[[b]]
             cur.out <- batch.out[[b]]
@@ -108,37 +99,78 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     return(output)
 }
 
-.computeCellWeights <- function(batch.out, batch.comp) { 
-    # Computing the average number of samples from each batch to use in correction.
+############################################################
+
+.computeCellWeights <- function(batch.out, batch.comp) 
+# Estimates the weight for each sample in each group in each batch.
+# This accounts for differences in numbers of groups per batch,
+# and for differences in numbers of cells per sample.
+{ 
+    all.levels <- unique(unlist(batch.comp))
+    batch.comp <- lapply(batch.comp, factor, levels=all.levels)
+
     comp.batches <- do.call(rbind, lapply(batch.comp, table))
     ref.comp <- colMeans(comp.batches)
     batch.weight <- t(ref.comp/t(comp.batches))
+
     empty.factors <- colSums(!is.finite(batch.weight)) > 0
     if (all(empty.factors)) {
         stop("no level of 'batch.comp' is common to all batches")
     }
-    use.batches <- colnames(batch.weight)[!empty.factors]
+    batch.weight <- batch.weight[,!empty.factors,drop=FALSE]
 
-    # Computes sample- and batch-specific case weights to be used for all markers.
     nbatches <- length(batch.out)
     batch.weights <- vector("list", nbatches)
-
     for (b in seq_len(nbatches)) { 
         cur.comp <- batch.comp[[b]]
         cur.out <- batch.out[[b]]
-        cur.weights <- num.cells <- numeric(length(cur.out$exprs))
+        cur.weights <- numeric(length(cur.out$exprs))
         
         for (s in seq_along(cur.out$exprs)) {
             sample.level <- as.character(cur.comp[s])
-            num.cells[s] <- nrow(cur.out$exprs[[s]])
-            if (sample.level %in% use.batches) { 
-                cur.weights[s] <- 1/num.cells[s] * batch.weight[b,sample.level]
+            num.cells <- nrow(cur.out$exprs[[s]])
+            if (sample.level %in% colnames(batch.weight)) { 
+                cur.weights[s] <- 1/num.cells * batch.weight[b,sample.level]
+            } else {
+                cur.weights[s] <- NA_real_
             }
         }
-        batch.weights[[b]] <- rep(cur.weights, num.cells)
+        batch.weights[[b]] <- cur.weights
     }
     return(batch.weights)
 }
+
+.pullOutMarkers <- function(batch.out, batch.weights) 
+# Returns functions that pull out intensities and weights for every marker.
+# Weights are also returned here (but not recalculated) to synchronize removal of zero-weight samples.
+{
+    nbatches <- length(batch.out)
+    all.mats <- all.wts <- vector("list", nbatches)
+    for (b in seq_along(batch.weights)) {
+        cur.weights <- batch.weights[[b]]
+        keep <- !is.na(cur.weights)
+        all.mats[[b]] <- batch.out[[b]]$exprs[keep]
+        num.cells <- vapply(all.mats[[b]], nrow, FUN.VALUE=0L)
+        all.wts[[b]] <- rep(cur.weights[keep], num.cells)
+    }
+
+    function(m) { 
+        all.obs <- vector("list", nbatches)
+        for (b in seq_len(nbatches)) { 
+            cur.out <- all.mats[[b]]
+            nsamples <- length(cur.out)
+
+            cur.obs <- vector("list", nsamples)
+            for (s in seq_len(nsamples)) { 
+                cur.obs[[s]] <- cur.out[[s]][,m]
+            }
+            all.obs[[b]] <- unlist(cur.obs)
+        }
+        list(exprs=all.obs, weights=all.wts)
+    }
+}
+
+############################################################
 
 #' @importClassesFrom flowCore flowSet
 #' @importFrom flowCore flowFrame normalization

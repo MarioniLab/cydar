@@ -33,15 +33,21 @@ batch.comp <- list(
 batch.out <- lapply(all.x, cydar:::.pull_out_data)
 test.wts <- cydar:::.computeCellWeights(batch.out, batch.comp)
 
+###########################################################
+
 test_that("Normalization weights are correctly calculated", {
-    # Checking the calculations
-    averages <- c("1"=5, "2"=5)
-    for (b in 1:3) {
+    getTargetComposition <- function(batch.comp) {
+        tab <- table(rep(seq_along(batch.comp), lengths(batch.comp)), unlist(batch.comp))
+        tab[,colSums(tab > 0)!=nrow(tab)] <- 0
+        colMeans(tab)
+    }
+
+    averages <- getTargetComposition(batch.comp)
+    for (b in seq_along(batch.comp)) {
         ncells <- unname(sapply(all.x[[b]], nrow))
         cur.b <- batch.comp[[b]]
-        cur.n <- unname(averages[cur.b]/table(cur.b)[cur.b])
-        ref.wts <- rep(cur.n/ncells, ncells)
-        expect_equal(ref.wts, test.wts[[b]])
+        cur.n <- unname(averages[cur.b]/as.vector(table(cur.b)[cur.b]))
+        expect_equal(cur.n/ncells, test.wts[[b]])
     }
 
     # Now with a missing group in one batch.
@@ -52,13 +58,13 @@ test_that("Normalization weights are correctly calculated", {
     )
     test.wts <- cydar:::.computeCellWeights(batch.out, missing.batch.comp)
 
-    averages <- c("1"=6, "2"=0)
-    for (b in 1:3) {
+    averages <- getTargetComposition(missing.batch.comp)
+    for (b in seq_along(missing.batch.comp)) { 
         ncells <- unname(sapply(all.x[[b]], nrow))
         cur.b <- missing.batch.comp[[b]]
-        cur.n <- unname(averages[cur.b]/table(cur.b)[cur.b])
-        ref.wts <- rep(cur.n/ncells, ncells)
-        expect_equal(ref.wts, test.wts[[b]])
+        cur.n <- unname(averages[cur.b]/as.vector(table(cur.b)[cur.b]))
+        cur.n[cur.n==0] <- NA
+        expect_equal(cur.n/ncells, test.wts[[b]])
     }
 
     # Now with a unique group in one batch.
@@ -69,15 +75,65 @@ test_that("Normalization weights are correctly calculated", {
     )
     test.wts <- cydar:::.computeCellWeights(batch.out, unique.batch.comp)
 
-    averages <- c("1"=7, "2"=0, "3"=0)
+    averages <- getTargetComposition(unique.batch.comp)
     for (b in 1:3) {
         ncells <- unname(sapply(all.x[[b]], nrow))
         cur.b <- unique.batch.comp[[b]]
-        cur.n <- unname(averages[cur.b]/table(cur.b)[cur.b])
-        ref.wts <- rep(cur.n/ncells, ncells)
-        expect_equal(ref.wts, test.wts[[b]])
+        cur.n <- unname(averages[cur.b]/as.vector(table(cur.b)[cur.b]))
+        cur.n[cur.n==0] <- NA
+        expect_equal(cur.n/ncells, test.wts[[b]])
     } 
 })
+
+
+test_that("Marker data extraction works as expected", {
+    extractMarker <- function(exprs, m) {
+        unlist(lapply(exprs, FUN=function(x) { x[,m] }), use.names=FALSE)
+    }
+
+    batch.weights <- list(runif(10), runif(10), runif(10))
+    FUN <- cydar:::.pullOutMarkers(batch.out, batch.weights)
+
+    ref.weights <- batch.weights
+    for (i in seq_along(ref.weights)) {
+        ncells <- vapply(batch.out[[i]]$exprs, nrow, 0L)
+        ref.weights[[i]] <- rep(batch.weights[[i]], ncells)
+    }
+
+    for (m in marker.names) {
+        test <- FUN(m)
+        expect_identical(ref.weights, test$weights)
+        for (i in seq_along(batch.out)) {
+            expect_identical(test$exprs[[i]], extractMarker(batch.out[[i]]$exprs, m))
+        }
+    }
+
+    # Checking for correct behaviour with NAs.
+    batch.weights[[1]][1:5] <- NA
+    batch.weights[[2]][6:10] <- NA
+    batch.weights[[3]][c(1,10)] <- NA
+    FUN <- cydar:::.pullOutMarkers(batch.out, batch.weights)
+
+    ref.weights <- batch.weights
+    for (i in seq_along(ref.weights)) {
+        cur.weights <- batch.weights[[i]]
+        keep <- !is.na(cur.weights)
+        ncells <- vapply(batch.out[[i]]$exprs[keep], nrow, 0L)
+        ref.weights[[i]] <- rep(cur.weights[keep], ncells)
+    }
+
+    for (m in marker.names) {
+        test <- FUN(m)
+        expect_identical(ref.weights, test$weights)
+        for (i in seq_along(batch.out)) {
+            cur.weights <- batch.weights[[i]]
+            keep <- !is.na(cur.weights)
+            expect_identical(test$exprs[[i]], extractMarker(batch.out[[i]]$exprs[keep], m))
+        }
+    }
+})
+
+###########################################################
 
 test_that("Range-based normalization functions are correct", {
     weighted.quantile <- function(obs, wts, p) {
