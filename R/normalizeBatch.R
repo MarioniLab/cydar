@@ -78,13 +78,15 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
         all.wts <- for.norm$weights
         
         # Choosing the normalization method.
-        curmode <- match.arg(mode[m], c("none", "range", "warp"))
+        curmode <- match.arg(mode[m], c("none", "range", "warp", "quantile"))
         if (curmode=="none") {
             ;
         } else if (curmode=="warp") { 
             converters <- .transformDistr(all.obs, all.wts, m, target=target, ...)
         } else if (curmode=="range") {
             converters <- .rescaleDistr(all.obs, all.wts, target=target, p=p)
+        } else if (curmode=="quantile") {
+            converters <- .quantileDistr(all.obs, all.wts, target=target)
         }
 
         # Applying the normalization method.
@@ -211,29 +213,27 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     return(converter)
 }
 
-#' @importFrom stats lm
+.getECDF <- function(cur.obs, cur.wts) 
+# Computes the bits and pieces necessary for the ECDF.
+{
+    o <- order(cur.obs)
+    cur.obs <- cur.obs[o]
+    cur.wts <- cur.wts[o]
+
+    # Taking the midpoint of each step, rather than the start/end points. 
+    mid.cum.weight <- cumsum(cur.wts) - cur.wts/2
+    total.weight <- sum(cur.wts)
+    list(x=mid.cum.weight/total.weight, y=cur.obs)
+}
+
+#' @importFrom stats lm approx
 .rescaleDistr <- function(all.obs, all.wts, target, p) {
-    # Computing the average max/min.
+    # Computing the average max/min (robustly).
     nbatches <- length(all.obs)
     batch.min <- batch.max <- numeric(nbatches)
     for (b in seq_len(nbatches)) { 
-        cur.obs <- all.obs[[b]]
-        cur.wts <- all.wts[[b]]
-
-        keep <- cur.wts>0
-        cur.obs <- cur.obs[keep]
-        cur.wts <- cur.wts[keep]
-
-        o <- order(cur.obs)
-        cur.obs <- cur.obs[o]
-        cur.wts <- cur.wts[o]
-
-        # Taking the midpoint of each step, rather than the start/end points. 
-        mid.cum.weight <- cumsum(cur.wts) - cur.wts/2
-        total.weight <- sum(cur.wts)
-        
-        # Getting the left/right extreme.
-        out <- approx(mid.cum.weight/total.weight, cur.obs, xout=c(p, 1-p), rule=2)$y
+        ecdf.out <- .getECDF(all.obs[[b]], all.wts[[b]])
+        out <- approx(ecdf.out$x, ecdf.out$y, xout=c(p, 1-p), rule=2)$y
         batch.min[b] <- out[1]
         batch.max[b] <- out[2]
     }
@@ -259,4 +259,48 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
         converters[[b]] <- FUNGEN(fit)
     }
     return(converters)
+}
+
+#' @importFrom stats approxfun
+.quantileDistr <- function(all.obs, all.wts, target) 
+# Performs quantile normalization across batches.
+{
+    nbatches <- length(all.obs)
+    all.x <- all.y <- vector("list", nbatches)
+    for (b in seq_len(nbatches)) { 
+        ecdf.out <- .getECDF(all.obs[[b]], all.wts[[b]])
+        all.x[[b]] <- ecdf.out$x
+        all.y[[b]] <- ecdf.out$y
+    }
+
+    all.quanfun <- mapply(approxfun, x=all.x, y=all.y, MoreArgs=list(rule=2))
+    output.fun <- vector("list", nbatches)
+
+    for (b in seq_len(nbatches)) { 
+        current.probs <- all.x[[b]]
+        current.quants <- all.y[[b]]
+                
+        # Correcting intensities for each sample in each batch; first by
+        # computing the average distribution to which all others should be squeezed.
+        target.profile <- 0
+        if (is.null(target)) { 
+            for (b2 in seq_len(nbatches)) { 
+                if (b==b2) { 
+                    target.profile <- target.profile + current.quants
+                } else{
+                    target.profile <- target.profile + all.quanfun[[b2]](current.probs)
+                }
+            }
+            target.profile <- target.profile/nbatches
+        } else {
+            target.profile <- all.quanfun[[target]](current.probs)
+        }
+                
+        # Constructing a function to do that squeezing (we could use the ordering to 
+        # get exactly which entry corresponds to which original observation, but that
+        # doesn't allow for samples that weren't used, e.g., due to non-common levels).
+        output.fun[[b]] <- approxfun(current.quants, target.profile, rule=2) 
+    }
+
+    return(output.fun)
 }
