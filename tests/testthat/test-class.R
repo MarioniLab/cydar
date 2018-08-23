@@ -50,7 +50,7 @@ test_that("CyData cell information getters work as expected", {
     cd2 <- prepareCellData(list(all.values1, all.values2), markers=chosen)
 
     out2 <- cellIntensities(cd2)
-    ref <- t(rbind(all.values1, all.values2))[,metadata(cd2)$cydar$precomputed$order]
+    ref <- t(rbind(all.values1, all.values2))[,int_metadata(cd2)$cydar$precomputed$order]
     expect_identical(out2, ref[chosen,])
     unused <- setdiff(rownames(ref), chosen)
     expect_identical(cellIntensities(cd2, mode="all"), ref[c(chosen, unused),])
@@ -59,8 +59,8 @@ test_that("CyData cell information getters work as expected", {
     # Testing cellInformation().
     info <- cellInformation(cd)
     expect_identical(nrow(info), ncol(out))
-    expect_identical(info$sample, rep(1:2, c(ncells1, ncells2))[metadata(cd)$cydar$precomputed$order])
-    expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2))[metadata(cd)$cydar$precomputed$order])
+    expect_identical(info$sample, rep(1:2, c(ncells1, ncells2))[int_metadata(cd)$cydar$precomputed$order])
+    expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2))[int_metadata(cd)$cydar$precomputed$order])
 
     # Testing getCenterCell().
     centers <- getCenterCell(cn)

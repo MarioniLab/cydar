@@ -22,7 +22,7 @@ test_that("medIntensities works as expected", {
 
     # Median intensities are computed correctly.
     combined <- rbind(all.values1[,to.use], all.values2[,to.use])
-    ref.groups <- kmknn::findNeighbors(combined, threshold=metadata(out)$cydar$tol * sqrt(sum(to.use)), get.distance=FALSE)$index
+    ref.groups <- kmknn::findNeighbors(combined, threshold=int_metadata(out)$cydar$tol * sqrt(sum(to.use)), get.distance=FALSE)$index
     sample.ids <- rep(c("A", "B"), c(ncells1, ncells2))
 
     for (u in which(!to.use)) { 

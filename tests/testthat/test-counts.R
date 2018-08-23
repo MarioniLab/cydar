@@ -20,15 +20,15 @@ test_that("countCells computes all hypersphere values correctly", {
     suppressWarnings(cd <- prepareCellData(fs))
     cn <- countCells(cd, filter=0L, downsample=1L, tol=tol)
 
-    tmp <- metadata(cn)$cydar
+    tmp <- int_metadata(cn)$cydar
     expect_equal(tmp$tol, tol)
     tmp$tol <- NULL
-    expect_identical(tmp, metadata(cd)$cydar)
+    expect_identical(tmp, int_metadata(cd)$cydar)
 
     # Checking that the center choices are correct.
-    sid <- metadata(cn)$cydar$sample.id[rowData(cn)$cydar$center.cell]
+    sid <- int_metadata(cn)$cydar$sample.id[int_elementMetadata(cn)$cydar$center.cell]
     expect_identical(sid, rep(1:2, c(ncells1, ncells2)))
-    cid <- metadata(cn)$cydar$cell.id[rowData(cn)$cydar$center.cell]
+    cid <- int_metadata(cn)$cydar$cell.id[int_elementMetadata(cn)$cydar$center.cell]
     expect_identical(unname(cid), c(seq_len(ncells1), seq_len(ncells2)))
 
     # Checking that the cell IDs are correct.
@@ -37,7 +37,7 @@ test_that("countCells computes all hypersphere values correctly", {
 
     ref <- kmknn::findNeighbors(X=total, threshold=threshold, get.distance=FALSE)$index
     ref <- lapply(ref, sort)
-    preorder <- metadata(cn)$cydar$precomputed$order
+    preorder <- int_metadata(cn)$cydar$precomputed$order
     obs <- lapply(cellAssignments(cn), FUN=function(i) { sort(preorder[i]) })
     expect_identical(ref, obs)
 
@@ -45,7 +45,7 @@ test_that("countCells computes all hypersphere values correctly", {
     collected <- matrix(0L, nrow(cn), ncol(cn))
     for (r in seq_along(cellAssignments(cn))) { 
         cell.indices <- cellAssignments(cn)[[r]]
-        collected[r,] <- tabulate(metadata(cn)$cydar$sample.id[cell.indices], nbin=2)
+        collected[r,] <- tabulate(int_metadata(cn)$cydar$sample.id[cell.indices], nbin=2)
     }
     expect_identical(collected, assay(cn, withDimnames=FALSE))
 
@@ -106,15 +106,15 @@ test_that("countCells responds to other parameter settings", {
 
     # Handles further downsampling.
     cn3 <- countCells(cd, filter=0L, downsample=3L, tol=tol)
-    cid <- metadata(cn)$cydar$cell.id[rowData(cn)$cydar$center.cell]
+    cid <- int_metadata(cn)$cydar$cell.id[int_elementMetadata(cn)$cydar$center.cell]
     expect_equal(cn3, cn[cid %% 3L == 1L,])
 
     cn10 <- countCells(cd, filter=0L, downsample=10L, tol=tol)
-    cid <- metadata(cn)$cydar$cell.id[rowData(cn)$cydar$center.cell]
+    cid <- int_metadata(cn)$cydar$cell.id[int_elementMetadata(cn)$cydar$center.cell]
     expect_equal(cn10, cn[cid %% 10L == 1L,])
 
     cn16 <- countCells(cd, filter=0L, downsample=16L, tol=tol)
-    cid <- metadata(cn)$cydar$cell.id[rowData(cn)$cydar$center.cell]
+    cid <- int_metadata(cn)$cydar$cell.id[int_elementMetadata(cn)$cydar$center.cell]
     expect_equal(cn16, cn[cid %% 16L == 1L,])
 
     # Handles parallelization.

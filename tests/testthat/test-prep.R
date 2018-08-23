@@ -23,16 +23,16 @@ test_that("prepareCellData works as expected", {
     # Checking that the cells are correctly ordered.
     sid <- rep(1:2, c(ncells1, ncells2))
     cid <- c(seq_len(ncells1), seq_len(ncells2))
-    pre <- metadata(out)$cydar$precomputed
-    expect_identical(sid[pre$order], metadata(out)$cydar$sample.id)
-    expect_identical(cid[pre$order], unname(metadata(out)$cydar$cell.id))
+    pre <- int_metadata(out)$cydar$precomputed
+    expect_identical(sid[pre$order], int_metadata(out)$cydar$sample.id)
+    expect_identical(cid[pre$order], unname(int_metadata(out)$cydar$cell.id))
 
     # Checking that the intensities are correctly reordered.
-    current <- paste0(metadata(out)$cydar$sample.id, ".", metadata(out)$cydar$cell.id)
+    current <- paste0(int_metadata(out)$cydar$sample.id, ".", int_metadata(out)$cydar$cell.id)
     original <- paste0(sid, ".", cid)
     m <- match(original, current)
     expect_equivalent(rbind(all.values1, all.values2), t(pre$data)[m,])
-    expect_identical(dim(metadata(out)$cydar$unused), c(0L, as.integer(ncells1+ncells2)))
+    expect_identical(dim(int_metadata(out)$cydar$unused), c(0L, as.integer(ncells1+ncells2)))
 })
 
 set.seed(90001)
@@ -53,8 +53,8 @@ test_that("prepareCellData works with subsetted markers", {
     set.seed(100)
     out.ref <- prepareCellData(list(X=all.values1[,spec], Y=all.values2[,spec]))
 
-    tmp.sub <- metadata(out.sub)$cydar
-    tmp.ref <- metadata(out.ref)$cydar
+    tmp.sub <- int_metadata(out.sub)$cydar
+    tmp.ref <- int_metadata(out.ref)$cydar
     expect_identical(tmp.sub$markers$used, tmp.ref$markers$used)
     tmp.sub$unused <- NULL
     tmp.ref$unused <- NULL
@@ -63,7 +63,7 @@ test_that("prepareCellData works with subsetted markers", {
     expect_equal(tmp.sub, tmp.ref)
 
     # Ensuring that the unused fields are valid.
-    expect_identical(metadata(out.sub)$cydar$unused, 
+    expect_identical(int_metadata(out.sub)$cydar$unused, 
         t(rbind(all.values1, all.values2)[tmp.sub$precomputed$order,-spec,drop=FALSE]))
 
     # Checking that we can subset by name as well.
@@ -88,9 +88,9 @@ test_that("prepareCellData behaves with ncdfFlowSet inputs", {
     ncells2 <- nrow(fs[[2]])
     sid <- rep(1:2, c(ncells1, ncells2))
     cid <- c(seq_len(ncells1), seq_len(ncells2))
-    pre <- metadata(out)$cydar$precomputed
-    expect_identical(sid[pre$order], metadata(out)$cydar$sample.id)
-    expect_identical(cid[pre$order], unname(metadata(out)$cydar$cell.id))
+    pre <- int_metadata(out)$cydar$precomputed
+    expect_identical(sid[pre$order], int_metadata(out)$cydar$sample.id)
+    expect_identical(cid[pre$order], unname(int_metadata(out)$cydar$cell.id))
 })
 
 set.seed(90002)

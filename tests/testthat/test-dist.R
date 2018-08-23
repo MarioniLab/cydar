@@ -9,8 +9,8 @@ test_that("neighborDistances works correctly", {
     colnames(coords) <- paste0("X", seq_len(nmarkers))
     suppressWarnings(cd <- prepareCellData(list(A=coords)))
 
-    ci <- metadata(cd)$cydar$precomputed$data
-    preorder <- metadata(cd)$cydar$precomputed$order
+    ci <- int_metadata(cd)$cydar$precomputed$data
+    preorder <- int_metadata(cd)$cydar$precomputed$order
 
     # Computing reference distances.
     refdist <- as.matrix(dist(t(ci)))
