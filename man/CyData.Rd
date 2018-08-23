@@ -1,7 +1,6 @@
 \name{CyData-class}
 \docType{class}
 
-\alias{CyData}
 \alias{CyData-class}
 \alias{show,CyData-method}
 
@@ -37,15 +36,12 @@ cellIntensities(x, mode=c("used", "all", "unused"))
 cellInformation(x)
 
 getCenterCell(x)
-
-CyData(...)
 }
 
 \arguments{
 \item{x, object}{A CyData object.}
 \item{mode}{String specifying the types of markers that should be returned.
 By default, only the markers used for distance calculations are returned (i.e., set as \code{markers=} in \code{?\link{prepareCellData}}).}
-\item{...}{Arguments to be passed to the \code{\link{SummarizedExperiment}} constructor.}
 }
 
 \details{
@@ -54,9 +50,9 @@ It is intended to store the cell counts for each group of cells (rows) for each 
 Groups are intended to be hyperspheres (see \code{\link{countCells}}) but could also be arbitrary clusters of cells.
 It also stores the median intensities for each group and the identity of cells in the groups, parallel to the rows.
 
-CyData objects should not be created directly by users, i.e., the \code{CyData} constructor should not be called manually.
+CyData objects should not be created directly by users.
 The class has some strict validity conditions that are not easily satisfied by manual construction.
-It is safer to rely on functions like \code{\link{prepareCellData}} and \code{\link{countCells}} to create the objects.
+It is strongly advised to rely on functions like \code{\link{prepareCellData}} and \code{\link{countCells}} to create the objects.
 
 The subsetting and combining behaviour of CyData objects is mostly the same as that of \linkS4class{SummarizedExperiment} objects.
 The only difference is that any attempt to subset or combine by column will result in a warning.
@@ -65,8 +61,6 @@ If a sample is to be removed, it is more appropriate to do so in the function th
 }
 
 \value{
-The \code{CyData} constructor returns a CyData object containing the specified information.
-
 The \code{intensities} method returns a matrix of intensities for each group of cells (rows) and markers (columns).
 
 The \code{cellAssignments} method returns a list of integer vectors, where each vector contains the identities of the cells in a group.
