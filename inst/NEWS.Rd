@@ -2,14 +2,16 @@
 \title{cydar News}
 \encoding{UTF-8}
 
-\section{Version 1.5.3}{\itemize{
-\item Restructured the CyData class for simplicity.
+\section{Version 1.5.4}{\itemize{
+\item Restructured the CyData class for simplicity and internal fields.
 
 \item Deprecated plotCell* functions, renamed them to plotSphere*.
 
 \item Added the createColorBar() convenience function.
 
 \item Removed the diffIntDist() function.
+
+\item Restored option for quantile normalization in normalizeBatch().
 }}
 
 \section{Version 1.4.0}{\itemize{

@@ -4,9 +4,10 @@ Date: 2018-08-22
 Title: Using Mass Cytometry for Differential Abundance Analyses
 Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
-Depends: BiocParallel, SummarizedExperiment
+Depends: BiocParallel, SingleCellExperiment
 Imports: viridis, methods, shiny, graphics, stats, grDevices, utils,
-        BiocGenerics, S4Vectors, flowCore, Biobase, Rcpp, kmknn
+        BiocGenerics, S4Vectors, flowCore, Biobase, Rcpp, kmknn, 
+        SummarizedExperiment
 Suggests: ncdfFlow, testthat, knitr, edgeR, limma, glmnet, BiocStyle,
         flowStats
 biocViews: FlowCytometry, MultipleComparison, Proteomics, SingleCell
