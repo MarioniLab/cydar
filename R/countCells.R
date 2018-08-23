@@ -3,6 +3,7 @@
 #' @importFrom BiocParallel SerialParam
 #' @importFrom SummarizedExperiment colData
 #' @importFrom S4Vectors metadata DataFrame
+#' @importFrom SingleCellExperiment int_elementMetadata int_metadata int_colData SingleCellExperiment
 countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10)
 # Extracts counts for each cell in a CyTOF experiment, based on the number of surrounding cells 
 # from each sample, given a prepared set of expression values for all cells in each sample.
@@ -34,10 +35,13 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     out.counts <- out.stats[[1]]
     out.coords <- out.stats[[2]]
 
-    # Creating a new object.
-    output <- CyData(assays=list(counts=out.counts), colData=colData(x), metadata=metadata(x),
-        rowData=DataFrame(cydar=I(DataFrame(intensities=I(out.coords), cellAssignments=I(ci), center.cell=chosen))))
-    metadata(output)$cydar$tol <- tol
+    # Creating a new object (again, creating a SCE first to circumvent the CyData validity check).
+    output <- SingleCellExperiment(assays=list(counts=out.counts), colData=colData(x), metadata=metadata(x))
+    int_metadata(output) <- int_metadata(x)
+    int_colData(output) <- int_colData(x)
+    int_elementMetadata(output)$cydar <- DataFrame(intensities=I(out.coords), cellAssignments=I(ci), center.cell=chosen)
+    int_metadata(output)$cydar$tol <- tol
+    output <- as(output, "CyData")
 
     # Reordering for various historical reasons.
     output <- output[order(sample.id[chosen], .raw_cell_id(output)[chosen]),]

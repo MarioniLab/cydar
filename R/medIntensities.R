@@ -19,7 +19,7 @@ medIntensities <- function(x, markers)
     }
     keep <- all.leftovers %in% selected
 
-    unused <- metadata(x)$cydar$unused[keep,,drop=FALSE]
+    unused <- .raw_unusedIntensities(x)[keep,,drop=FALSE]
     out <- .Call(cxx_compute_median_int, unused, ncol(x), .raw_sample_id(x), .raw_cellAssignments(x))
     
     chosen.leftovers <- all.leftovers[keep]

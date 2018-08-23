@@ -2,8 +2,8 @@
 ## This differs from a standard SE class only in that it raises warnings upon column subsetting and binding.
 
 #' @export
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment
-setClass("CyData", contains="SummarizedExperiment")
+#' @importClassesFrom SingleCellExperiment SingleCellExperiment
+setClass("CyData", contains="SingleCellExperiment")
 
 #' @importFrom S4Vectors setValidity2
 setValidity2("CyData", function(object) {
@@ -75,13 +75,7 @@ setMethod("cbind", "CyData", function(..., deparse.level=1) {
 })
 
 ################################################
-# Defining a stub constructor.
-
-#' @export
-#' @importFrom SummarizedExperiment SummarizedExperiment
-CyData <- function(...) {
-    new("CyData", SummarizedExperiment(...))
-}
+# Defining show methods.
 
 scat <- function(fmt, vals=character(), exdent=2, ...) {
     vals <- ifelse(nzchar(vals), vals, "''")
@@ -102,8 +96,8 @@ setMethod("show", signature("CyData"), function(object) {
 ################################################
 ## Defining some getters and setters for internal use.
 
-#' @importFrom S4Vectors metadata
-.raw_metadata <- function(x) metadata(x)$cydar
+#' @importFrom SingleCellExperiment int_metadata
+.raw_metadata <- function(x) int_metadata(x)$cydar
 
 .raw_precomputed <- function(x) .raw_metadata(x)$precomputed
 
@@ -115,8 +109,8 @@ setMethod("show", signature("CyData"), function(object) {
 
 .raw_cell_id <- function(x) .raw_metadata(x)$cell.id
 
-#' @importFrom SummarizedExperiment rowData
-.raw_rowdata <- function(x) rowData(x)$cydar
+#' @importFrom SingleCellExperiment int_elementMetadata
+.raw_rowdata <- function(x) int_elementMetadata(x)$cydar
 
 .raw_cellAssignments <- function(x) .raw_rowdata(x)$cellAssignments
 
@@ -157,7 +151,7 @@ setMethod("intensities", "CyData", function(x) {
 #' @importFrom flowCore markernames
 setMethod("markernames", "CyData", function(object, mode=c("used", "all", "unused")) {
     mode <- match.arg(mode)
-    mdata <- metadata(object)$cydar$markers
+    mdata <- .raw_metadata(object)$markers
     switch(mode, used=mdata$used,
         unused=mdata$unused,
         all=c(mdata$used, mdata$unused))

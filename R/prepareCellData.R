@@ -1,6 +1,8 @@
 #' @export
 #' @importFrom kmknn precluster
 #' @importFrom methods as
+#' @importFrom S4Vectors DataFrame
+#' @importFrom SingleCellExperiment int_metadata SingleCellExperiment
 prepareCellData <- function(x, markers=NULL, ...) 
 # Converts it into a format more suitable for high-speed analysis.
 # Also does k-means clustering to generate the necessary clusters.
@@ -22,9 +24,9 @@ prepareCellData <- function(x, markers=NULL, ...)
     used <- .chosen_markers(markers, marker.names)
     reorg <- precluster(exprs[,used,drop=FALSE], ...)
   
-    # Collating the output. 
-    output <- SummarizedExperiment(colData=DataFrame(row.names=sample.names))
-    metadata(output)$cydar <- list(
+    # Collating the output (constructing an SCE first to avoid CyData validity check).
+    output <- SingleCellExperiment(colData=DataFrame(row.names=sample.names))
+    int_metadata(output)$cydar <- list(
         precomputed=reorg,
         markers=list(used=marker.names[used], unused=marker.names[!used]),
         sample.id=sample.id[reorg$order],

@@ -1,4 +1,4 @@
-#' @import SummarizedExperiment
+#' @import SingleCellExperiment
 #' @import BiocParallel
 #' @import methods
 #' @importFrom Rcpp sourceCpp
