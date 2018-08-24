@@ -174,21 +174,33 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
 
 ############################################################
 
+.getECDF <- function(cur.obs, cur.wts) 
+# Computes the bits and pieces necessary for the ECDF.
+{
+    o <- order(cur.obs)
+    cur.obs <- cur.obs[o]
+    cur.wts <- cur.wts[o]
+
+    # Taking the midpoint of each step, rather than the start/end points. 
+    mid.cum.weight <- cumsum(cur.wts) - cur.wts/2
+    total.weight <- sum(cur.wts)
+    list(cumprob=mid.cum.weight/total.weight, value=cur.obs)
+}
+
 #' @importClassesFrom flowCore flowSet
 #' @importFrom flowCore flowFrame normalization
-#' @importFrom stats splinefun
+#' @importFrom stats splinefun approx
 #' @importMethodsFrom BiocGenerics colnames<-
 #' @importMethodsFrom flowCore normalize
 .transformDistr <- function(all.obs, all.wts, name, target, ...) {
-    # Subsample intensities proportional to weights.
+    # Create a mock sample by sampling at points along the ECDF.
     nbatch <- length(all.obs)
     cur.ffs <- vector("list", nbatch)
     for (b in seq_len(nbatch)) {
-        cur.obs <- all.obs[[b]]
-        cur.wts <- all.wts[[b]]
-        chosen <- sample(cur.obs, length(cur.obs), prob=cur.wts, replace=TRUE)
-        chosen <- c(chosen, range(cur.obs)) # Adding also the first and last entries.
-        cur.ffs[[b]] <- flowFrame(cbind(M=chosen))
+        ecdf.out <- .getECDF(all.obs[[b]], all.wts[[b]])
+        pts <- seq(0, 1, length.out=(length(all.obs[[b]])+2L)) # Note, always have the first and last entries.
+        mock <- approx(ecdf.out$cumprob, ecdf.out$value, xout=pts)$y
+        cur.ffs[[b]] <- flowFrame(cbind(M=mock))
     }        
 
     names(cur.ffs) <- names(all.obs)
@@ -213,19 +225,6 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     return(converter)
 }
 
-.getECDF <- function(cur.obs, cur.wts) 
-# Computes the bits and pieces necessary for the ECDF.
-{
-    o <- order(cur.obs)
-    cur.obs <- cur.obs[o]
-    cur.wts <- cur.wts[o]
-
-    # Taking the midpoint of each step, rather than the start/end points. 
-    mid.cum.weight <- cumsum(cur.wts) - cur.wts/2
-    total.weight <- sum(cur.wts)
-    list(x=mid.cum.weight/total.weight, y=cur.obs)
-}
-
 #' @importFrom stats lm approx
 .rescaleDistr <- function(all.obs, all.wts, target, p) {
     # Computing the average max/min (robustly).
@@ -233,7 +232,7 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     batch.min <- batch.max <- numeric(nbatches)
     for (b in seq_len(nbatches)) { 
         ecdf.out <- .getECDF(all.obs[[b]], all.wts[[b]])
-        out <- approx(ecdf.out$x, ecdf.out$y, xout=c(p, 1-p), rule=2)$y
+        out <- approx(ecdf.out$cumprob, ecdf.out$value, xout=c(p, 1-p), rule=2)$y
         batch.min[b] <- out[1]
         batch.max[b] <- out[2]
     }
@@ -269,8 +268,8 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     all.x <- all.y <- vector("list", nbatches)
     for (b in seq_len(nbatches)) { 
         ecdf.out <- .getECDF(all.obs[[b]], all.wts[[b]])
-        all.x[[b]] <- ecdf.out$x
-        all.y[[b]] <- ecdf.out$y
+        all.x[[b]] <- ecdf.out$cumprob
+        all.y[[b]] <- ecdf.out$value
     }
 
     all.quanfun <- mapply(approxfun, x=all.x, y=all.y, MoreArgs=list(rule=2))
