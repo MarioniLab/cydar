@@ -199,21 +199,19 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
     for (b in seq_len(nbatch)) {
         ecdf.out <- .getECDF(all.obs[[b]], all.wts[[b]])
         pts <- seq(0, 1, length.out=(length(all.obs[[b]])+2L)) # Note, always have the first and last entries.
-        mock <- approx(ecdf.out$cumprob, ecdf.out$value, xout=pts)$y
+        mock <- approx(ecdf.out$cumprob, ecdf.out$value, xout=pts, rule=2)$y
         cur.ffs[[b]] <- flowFrame(cbind(M=mock))
     }        
 
-    names(cur.ffs) <- names(all.obs)
-    fs <- as(cur.ffs, "flowSet")
-    colnames(fs) <- name
-    if (!is.null(target)) { 
+    if (!is.null(target)) {
+        names(cur.ffs) <- seq_len(nbatch)
         target <- names(cur.ffs)[target]
     }
+    fs <- as(cur.ffs, "flowSet")
+    colnames(fs) <- name
 
     # Applying warping normalization, as described in the flowStats vignette.
-    norm <- normalization(normFunction=function(x, parameters, ...) { flowStats::warpSet(x, parameters, ...) },
-                          parameters=name, arguments=list(monwrd=TRUE, target=target, ...))
-    new.fs <- normalize(fs, norm)
+    new.fs <- flowStats::warpSet(fs, name, monwrd=TRUE, target=target, ...)
 
     # Defining warp functions (setting warpFuns doesn't really work, for some reason).
     converter <- vector("list", nbatch)
