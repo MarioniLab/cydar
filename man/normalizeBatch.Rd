@@ -34,15 +34,15 @@ The process for each marker is as follows:
 The composition of each batch can be specified by \code{batch.comp}, see below for more details.
 The weighted intensities for each batch represents the pooled distribution of intensities from all samples in that batch.
 \item If \code{mode="range"}, a quantile function is constructed for the pooled distribution of each batch.
-These functions are averaged across batches to obtain a reference quantile function (if \code{target=NULL}), representing a reference distribution.
+A reference quantile function is obtained (see below), representing a reference distribution.
 The range of the reference distribution is computed at percentiles \code{p} and \code{1-p} (to avoid distortions due to outliers).
 A batch-specific scaling function is defined to equalize the range of the weighted distribution of intensities from each batch to the reference range.
-\item If \code{mode="quantile"}, a quantile function is constructed as described above.
-The average of these quantile functions is used to define a reference distribution, assuming that \code{target=NULL}.
+\item If \code{mode="quantile"}, a quantile function is constructed as described above, along with a reference quantile function.
 A batch-specific transformation function is defined to convert the quantiles for each batch to the corresponding quantiles of the reference.
-\item If \code{mode="warp"}, weighted sampling from each pooled distribution is performed to generate a pseudo-sample for each batch.
+This is equivalent to coercing all batch-specific intensity distributions to the reference distribution.
+\item If \code{mode="warp"}, a mock set of intensities is generated is generated that accounts for the differential weighting of events in each batch. 
 This is used to construct a flowSet for use in warping normalization - see \code{?\link{normalization}} and \code{?\link[flowStats]{warpSet}} for details.
-A warping function is computed for each batch that adjust the intensity distribution to be more similar to the reference (constructed by averaging across batches).
+A warping function is computed for each batch that equalizes the locations of landmarks (i.e., peaks) in both the batch-specific and reference intensity distributions.
 \item The transformation function is applied to the intensities of \emph{all} samples in that batch, yielding corrected intensities for direct comparisons between samples.
 }
 
@@ -56,9 +56,12 @@ Ideally, all batches would contain samples from all groups, with similar total n
 The adjustment function will still be applied to intensities for samples from non-shared groups that do not contribute to the reference distribution.
 However, note that the adjustment may not be accurate if the to-be-corrected intensities lie outside the range of values used to construct the function.
 
-By default, the reference distribution for each marker is defined as an average of the relevant statistic across batches.
+If \code{target=NULL}, the reference distribution for each marker is defined as an average of the relevant statistic across batches.
+For \code{mode="range"} or \code{mode="quantile"}, this means that the reference quantile function is defined as the average of the functions across all batches.
+For \code{mode="warp"}, the average location of each landmark across all batches is used.
+
 If \code{target} is not \code{NULL}, the specified batch will be used as the reference distribution.
-This means that if \code{mode="range"} or \code{mode="quantile"}, the reference quantile function will be defined as the quantile function of the chosen batch.
+For \code{mode="range"} or \code{mode="quantile"}, this means that the reference quantile function will be defined as the quantile function of the chosen batch.
 Similarly, if \code{mode="warp"}, \code{\link[flowStats]{warpSet}} will align all other batches to the locations of the peaks in \code{target}.
 
 All markers are used by default when \code{markers=NULL}.
@@ -138,10 +141,5 @@ plot(ecdf(all.x[[1]][[3]][,1]), col="blue", main="Before")
 plot(ecdf(all.x[[2]][[3]][,1]), add=TRUE, col="red")
 plot(ecdf(corrected[[1]][[3]][,1]), col="blue", main="After")
 plot(ecdf(corrected[[2]][[3]][,1]), add=TRUE, col="red")
-
-# Similar effects with warping normalization. 
-if (.Platform$OS.type!="windows") {
-    wcorrected <- normalizeBatch(all.x, batch.comp, mode="warp")
-}
 }
 
