@@ -238,16 +238,15 @@ test_that("Overall normalization function does its job", {
     newV <- get.meanvar(post.xr)
     expect_true(all(oldV > newV))
 
-    # Repeating with quantile normalization, using only the first two markers for speed.
+    # Repeating with quantile normalization.
     post.xq <- normalizeBatch(all.x, batch.comp, mode="quantile")
     newV <- get.meanvar(post.xq)
     expect_true(all(oldV > newV))
 
-    # Repeating with warping, using only the first two markers for speed.
-    set.seed(9999)
-    post.xw <- normalizeBatch(all.x, batch.comp, markers=c("X1", "X2"), mode="warp")
+    # Repeating with warping.
+    post.xw <- normalizeBatch(all.x, batch.comp, mode="warp")
     newV <- get.meanvar(post.xw)
-    expect_true(all(oldV[1:2] > newV))
+    expect_true(all(oldV > newV))
 
     # Checking that setting markers does the same thing.
     chosen <- c("X2", "X7")
@@ -262,3 +261,14 @@ test_that("Overall normalization function does its job", {
     }
 })
 
+test_that("setting target behaves correctly", {
+    # Specifically, it should not change the intensities of the target batch.
+    post.xq <- normalizeBatch(all.x, batch.comp, mode="quantile", target=2)
+    expect_identical(post.xq[[2]], all.x[[2]])
+
+    post.xr <- normalizeBatch(all.x, batch.comp, mode="range", target=1)
+    expect_identical(post.xr[[1]], all.x[[1]])
+
+    post.xw <- normalizeBatch(all.x, batch.comp, mode="warp", target=3)
+    expect_identical(post.xw[[3]], all.x[[3]])
+})
