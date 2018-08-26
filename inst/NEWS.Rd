@@ -2,7 +2,7 @@
 \title{cydar News}
 \encoding{UTF-8}
 
-\section{Version 1.5.4}{\itemize{
+\section{Version 1.5.5}{\itemize{
 \item Restructured the CyData class for simplicity and internal fields.
 
 \item Deprecated plotCell* functions, renamed them to plotSphere*.
@@ -12,6 +12,7 @@
 \item Removed the diffIntDist() function.
 
 \item Restored option for quantile normalization in normalizeBatch().
+Switched to deterministic algorithm for sampling when mode="warp".
 }}
 
 \section{Version 1.4.0}{\itemize{
