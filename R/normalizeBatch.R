@@ -188,10 +188,10 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
 }
 
 #' @importClassesFrom flowCore flowSet
-#' @importFrom flowCore flowFrame normalization
+#' @importFrom flowCore flowFrame 
+#' @importFrom methods as
 #' @importFrom stats splinefun approx
 #' @importMethodsFrom BiocGenerics colnames<-
-#' @importMethodsFrom flowCore normalize
 .transformDistr <- function(all.obs, all.wts, name, target, ...) {
     # Create a mock sample by sampling at points along the ECDF.
     nbatch <- length(all.obs)
