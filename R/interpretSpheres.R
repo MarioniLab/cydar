@@ -431,7 +431,12 @@ makeLabPlot <- function(input, red.coords, collected) {
         # For unused markers, we take the mean of sample-wise medians, reflecting the linear modelling of the medians.
         if (was.used) { 
             curpos <- coords[current, m]
-            curdex <- round(approx(collim[,m], c(1, 100), xout=curpos, rule=2)$y)
+            curlim <- collim[,m]
+            if (diff(curlim) > 0) {
+                curdex <- round(approx(collim[,m], c(1, 100), xout=curpos, rule=2)$y)
+            } else {
+                curdex <- 1L
+            }
             curcol <- all.cols[curdex]
             cur.cell.int <- used.int[match(m, used.markers), cur.assign, drop=FALSE]
         } else {
