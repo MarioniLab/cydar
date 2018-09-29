@@ -13,12 +13,12 @@ prepareCellData(x, markers=NULL, ...)
 \item{x}{A named list of numeric matrices, where each matrix corresponds to a sample and contains expression intensities for each cell (row) and each marker (column).
 Alternatively, a ncdfFlowSet object containing the same information.}
 \item{markers}{A vector specifying the markers to use in downstream analyses.}
-\item{...}{Additional arguments to pass to \code{\link{precluster}}.}
+\item{...}{Additional arguments to pass to \code{\link{buildKmknn}}.}
 }
 
 \details{
 This function constructs a CyData object from the marker intensities of each cell in one or more samples.
-The \code{\link{precluster}} function is used to precompute internal structures for downstream nearest-neighbour searching.
+The \code{\link{buildKmknn}} function is used to precompute internal structures for downstream nearest-neighbour searching.
 
 If \code{markers} is specified, only the selected markers will be used in the precomputation.
 This restricts the markers that are used in downstream functions - namely, \code{\link{countCells}} and \code{\link{neighborDistances}}.
