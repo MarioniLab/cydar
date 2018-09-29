@@ -1,5 +1,5 @@
 #' @export
-#' @importFrom kmknn findNeighbors precluster
+#' @importFrom BiocNeighbors findNeighbors buildKmknn KmknnIndex_clustered_order KmknnIndex_clustered_data
 #' @importFrom methods is
 findFirstSphere <- function(x, pvalues, threshold=1, block=NULL)
 # Returns a logical vector indicating which hyperspheres are redundant
@@ -31,13 +31,14 @@ findFirstSphere <- function(x, pvalues, threshold=1, block=NULL)
     }
 
     # Using findNeighbors to screen out candidates based on the enclosing hypersphere.
-    pre <- precluster(x)
+    pre <- buildKmknn(x)
     MULT <- max(1, sqrt(nrow(x)))
     potential <- findNeighbors(precomputed=pre, threshold=threshold * MULT, get.distance=FALSE, raw.index=TRUE)$index
 
-    pvalues <- pvalues[pre$order]
-    out <- .Call(cxx_drop_redundant, pre$data, order(pvalues) - 1L, potential, threshold)
-    out[pre$order] <- out
+    reorder <- KmknnIndex_clustered_order(pre)
+    pvalues <- pvalues[reorder]
+    out <- .Call(cxx_drop_redundant, KmknnIndex_clustered_data(pre), order(pvalues) - 1L, potential, threshold)
+    out[reorder] <- out
     return(out)
 }
 

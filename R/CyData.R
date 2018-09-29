@@ -90,7 +90,7 @@ scat <- function(fmt, vals=character(), exdent=2, ...) {
 setMethod("show", signature("CyData"), function(object) {
     callNextMethod()
     scat("markers(%d): %s\n", markernames(object))
-    cat(sprintf("cells: %i\n", ncol(.raw_precomputed(object)$data)))
+    cat(sprintf("cells: %i\n", nrow(.raw_precomputed(object))))
 })
 
 ################################################
@@ -101,7 +101,8 @@ setMethod("show", signature("CyData"), function(object) {
 
 .raw_precomputed <- function(x) .raw_metadata(x)$precomputed
 
-.raw_cellIntensities <- function(x) .raw_precomputed(x)$data
+#' @importFrom BiocNeighbors KmknnIndex_clustered_data
+.raw_cellIntensities <- function(x) KmknnIndex_clustered_data(.raw_precomputed(x))
 
 .raw_unusedIntensities <- function(x) .raw_metadata(x)$unused
 

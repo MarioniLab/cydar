@@ -1,5 +1,5 @@
 #' @export
-#' @importFrom kmknn queryKNN
+#' @importFrom BiocNeighbors queryKmknn
 labelSpheres <- function(x, labels)
 # Spreads the labels to all hyperspheres, based on the closest labelled hypersphere 
 # 
@@ -29,6 +29,6 @@ labelSpheres <- function(x, labels)
     # Finding closest labelled hypersphere for each other hypersphere.
     coords <- as.matrix(coords)    
     labelled <- coords[has.label,,drop=FALSE]
-    closest <- queryKNN(X=labelled, query=coords, k=1, get.distance=FALSE)
+    closest <- queryKmknn(X=labelled, query=coords, k=1, get.distance=FALSE)
     fresh.labels[closest$index]
 }

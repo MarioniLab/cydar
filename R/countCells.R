@@ -1,5 +1,5 @@
 #' @export
-#' @importFrom kmknn findNeighbors
+#' @importFrom BiocNeighbors findNeighbors KmknnIndex_clustered_data
 #' @importFrom BiocParallel SerialParam
 #' @importFrom SummarizedExperiment colData
 #' @importFrom S4Vectors metadata DataFrame
@@ -31,7 +31,7 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
         
     # Computing the associated statistics.
     sample.id <- .raw_sample_id(x)
-    out.stats <- .Call(cxx_compute_hyperstats, pre$data, ncol(x), sample.id - 1L, ci)
+    out.stats <- .Call(cxx_compute_hyperstats, KmknnIndex_clustered_data(pre), ncol(x), sample.id - 1L, ci)
     out.counts <- out.stats[[1]]
     out.coords <- out.stats[[2]]
 

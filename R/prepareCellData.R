@@ -1,5 +1,5 @@
 #' @export
-#' @importFrom kmknn precluster
+#' @importFrom BiocNeighbors buildKmknn KmknnIndex_clustered_order
 #' @importFrom methods as
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SingleCellExperiment int_metadata SingleCellExperiment
@@ -22,16 +22,17 @@ prepareCellData <- function(x, markers=NULL, ...)
 
     # Picking markers to use.
     used <- .chosen_markers(markers, marker.names)
-    reorg <- precluster(exprs[,used,drop=FALSE], ...)
+    reorg <- buildKmknn(exprs[,used,drop=FALSE], ...)
+    reorder <- KmknnIndex_clustered_order(reorg)
   
     # Collating the output (constructing an SCE first to avoid CyData validity check).
     output <- SingleCellExperiment(colData=DataFrame(row.names=sample.names))
     int_metadata(output)$cydar <- list(
         precomputed=reorg,
         markers=list(used=marker.names[used], unused=marker.names[!used]),
-        sample.id=sample.id[reorg$order],
-        cell.id=cell.id[reorg$order],
-        unused=t(exprs[reorg$order,!used,drop=FALSE])
+        sample.id=sample.id[reorder],
+        cell.id=cell.id[reorder],
+        unused=t(exprs[reorder,!used,drop=FALSE])
     )
 
     output$totals <- ncells.per.sample

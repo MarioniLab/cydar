@@ -1,12 +1,12 @@
 Package: cydar
-Version: 1.5.6
-Date: 2018-09-06
+Version: 1.5.7
+Date: 2018-09-29
 Title: Using Mass Cytometry for Differential Abundance Analyses
 Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
 Depends: BiocParallel, SingleCellExperiment
 Imports: viridis, methods, shiny, graphics, stats, grDevices, utils,
-        BiocGenerics, S4Vectors, flowCore, Biobase, Rcpp, kmknn, 
+        BiocGenerics, S4Vectors, flowCore, Biobase, Rcpp, BiocNeighbors, 
         SummarizedExperiment
 Suggests: ncdfFlow, testthat, knitr, edgeR, limma, glmnet, BiocStyle,
         flowStats
