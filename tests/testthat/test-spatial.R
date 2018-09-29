@@ -8,9 +8,9 @@ coords <- matrix(rnorm(nhypers*nmarkers, sd=1), nrow=nhypers, ncol=nmarkers)
 colnames(coords) <- paste0("X", seq_len(nmarkers))
 
 test_that("Density calculation works correctly", {   
-    d2n <- kmknn::findKNN(coords, k=50, get.index=FALSE)$distance
+    d2n <- BiocNeighbors::findKNN(coords, k=50, get.index=FALSE)$distance
     bandwidth <- median(d2n[,50])
-    refbands <- kmknn::findNeighbors(coords, threshold=bandwidth, get.index=FALSE)$distance
+    refbands <- BiocNeighbors::findNeighbors(coords, threshold=bandwidth, get.index=FALSE)$distance
     densities <- .Call(cydar:::cxx_compute_density, refbands, bandwidth)
 
     refdist <- as.matrix(dist(coords))
@@ -28,7 +28,7 @@ test_that("spatialFDR works correctly overall", {
     x <- spatialFDR(coords, pval, neighbors=nn)
 
     # Testing that it responds to the bandwidth.
-    d2n <- kmknn::findKNN(coords, k=nn, get.index=FALSE)$distance
+    d2n <- BiocNeighbors::findKNN(coords, k=nn, get.index=FALSE)$distance
     bandwidth <- median(d2n[,nn])
     x2 <- spatialFDR(coords, pval, bandwidth=bandwidth)
     expect_equal(x, x2)

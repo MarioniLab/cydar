@@ -11,7 +11,7 @@ test_that("labelSpheres is working correctly", {
     all.labels[sample(nhypers, length(LETTERS))] <- LETTERS
     
     re.label <- labelSpheres(coords, all.labels)
-    out <- kmknn::queryKNN(query=coords, X=coords[all.labels!="",], k=2)
+    out <- BiocNeighbors::queryKNN(query=coords, X=coords[all.labels!="",], k=2)
     expect_identical(re.label, all.labels[all.labels!=""][out$index[,1]])
 
     # Handles duplicate labels.
@@ -20,7 +20,7 @@ test_that("labelSpheres is working correctly", {
     all.labels[sample(nhypers, 50, replace=TRUE)] <- sample(LETTERS, 50, replace=TRUE)
 
     re.label <- labelSpheres(coords, all.labels)
-    out <- kmknn::queryKNN(query=coords, X=coords[all.labels!="",], k=2)
+    out <- BiocNeighbors::queryKNN(query=coords, X=coords[all.labels!="",], k=2)
     expect_identical(re.label, all.labels[all.labels!=""][out$index[,1]])
 
     # Handles solo labels.

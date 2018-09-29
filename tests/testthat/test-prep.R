@@ -24,14 +24,15 @@ test_that("prepareCellData works as expected", {
     sid <- rep(1:2, c(ncells1, ncells2))
     cid <- c(seq_len(ncells1), seq_len(ncells2))
     pre <- int_metadata(out)$cydar$precomputed
-    expect_identical(sid[pre$order], int_metadata(out)$cydar$sample.id)
-    expect_identical(cid[pre$order], unname(int_metadata(out)$cydar$cell.id))
+    reorder <- BiocNeighbors::KmknnIndex_clustered_order(pre)
+    expect_identical(sid[reorder], int_metadata(out)$cydar$sample.id)
+    expect_identical(cid[reorder], unname(int_metadata(out)$cydar$cell.id))
 
     # Checking that the intensities are correctly reordered.
     current <- paste0(int_metadata(out)$cydar$sample.id, ".", int_metadata(out)$cydar$cell.id)
     original <- paste0(sid, ".", cid)
     m <- match(original, current)
-    expect_equivalent(rbind(all.values1, all.values2), t(pre$data)[m,])
+    expect_equivalent(rbind(all.values1, all.values2), t(BiocNeighbors::KmknnIndex_clustered_data(pre))[m,])
     expect_identical(dim(int_metadata(out)$cydar$unused), c(0L, as.integer(ncells1+ncells2)))
 })
 
@@ -63,8 +64,9 @@ test_that("prepareCellData works with subsetted markers", {
     expect_equal(tmp.sub, tmp.ref)
 
     # Ensuring that the unused fields are valid.
+    reorder <- BiocNeighbors::KmknnIndex_clustered_order(tmp.sub$precomputed)
     expect_identical(int_metadata(out.sub)$cydar$unused, 
-        t(rbind(all.values1, all.values2)[tmp.sub$precomputed$order,-spec,drop=FALSE]))
+        t(rbind(all.values1, all.values2)[reorder,-spec,drop=FALSE]))
 
     # Checking that we can subset by name as well.
     spec <- c("X2","X3","X4")
@@ -88,9 +90,9 @@ test_that("prepareCellData behaves with ncdfFlowSet inputs", {
     ncells2 <- nrow(fs[[2]])
     sid <- rep(1:2, c(ncells1, ncells2))
     cid <- c(seq_len(ncells1), seq_len(ncells2))
-    pre <- int_metadata(out)$cydar$precomputed
-    expect_identical(sid[pre$order], int_metadata(out)$cydar$sample.id)
-    expect_identical(cid[pre$order], unname(int_metadata(out)$cydar$cell.id))
+    reorder <- BiocNeighbors::KmknnIndex_clustered_order(int_metadata(out)$cydar$precomputed)
+    expect_identical(sid[reorder], int_metadata(out)$cydar$sample.id)
+    expect_identical(cid[reorder], unname(int_metadata(out)$cydar$cell.id))
 })
 
 set.seed(90002)

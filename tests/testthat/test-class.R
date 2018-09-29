@@ -46,12 +46,15 @@ test_that("CyData cell information getters work as expected", {
     expect_identical(out, cellIntensities(cn, mode="all"))
     expect_identical(dim(cellIntensities(cn, mode="unused")), c(0L, ncol(out)))
 
+    # Testing with unused markers.
     chosen <- c("X2", "X7", "X8")
     cd2 <- prepareCellData(list(all.values1, all.values2), markers=chosen)
 
     out2 <- cellIntensities(cd2)
-    ref <- t(rbind(all.values1, all.values2))[,int_metadata(cd2)$cydar$precomputed$order]
+    o <- BiocNeighbors::KmknnIndex_clustered_order(int_metadata(cd2)$cydar$precomputed)
+    ref <- t(rbind(all.values1, all.values2))[,o]
     expect_identical(out2, ref[chosen,])
+
     unused <- setdiff(rownames(ref), chosen)
     expect_identical(cellIntensities(cd2, mode="all"), ref[c(chosen, unused),])
     expect_identical(cellIntensities(cd2, mode="unused"), ref[unused,])
@@ -59,8 +62,10 @@ test_that("CyData cell information getters work as expected", {
     # Testing cellInformation().
     info <- cellInformation(cd)
     expect_identical(nrow(info), ncol(out))
-    expect_identical(info$sample, rep(1:2, c(ncells1, ncells2))[int_metadata(cd)$cydar$precomputed$order])
-    expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2))[int_metadata(cd)$cydar$precomputed$order])
+
+    o <- BiocNeighbors::KmknnIndex_clustered_order(int_metadata(cd)$cydar$precomputed)
+    expect_identical(info$sample, rep(1:2, c(ncells1, ncells2))[o])
+    expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2))[o])
 
     # Testing getCenterCell().
     centers <- getCenterCell(cn)
