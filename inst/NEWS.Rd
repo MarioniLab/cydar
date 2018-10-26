@@ -2,7 +2,7 @@
 \title{cydar News}
 \encoding{UTF-8}
 
-\section{Version 1.5.5}{\itemize{
+\section{Version 1.6.0}{\itemize{
 \item Restructured the CyData class for simplicity and internal fields.
 
 \item Deprecated plotCell* functions, renamed them to plotSphere*.
