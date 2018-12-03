@@ -37,7 +37,7 @@ test_that("countCells computes all hypersphere values correctly", {
 
     ref <- BiocNeighbors::findNeighbors(X=total, threshold=threshold, get.distance=FALSE)$index
     ref <- lapply(ref, sort)
-    preorder <- BiocNeighbors::KmknnIndex_clustered_order(int_metadata(cn)$cydar$precomputed)
+    preorder <- BiocNeighbors::bnorder(int_metadata(cn)$cydar$precomputed)
     obs <- lapply(cellAssignments(cn), FUN=function(i) { sort(preorder[i]) })
     expect_identical(ref, obs)
 

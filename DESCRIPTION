@@ -1,6 +1,6 @@
 Package: cydar
-Version: 1.7.0
-Date: 2018-10-26
+Version: 1.7.1
+Date: 2018-12-03
 Title: Using Mass Cytometry for Differential Abundance Analyses
 Authors@R: c(person("Aaron", "Lun", role=c("aut", "cre"), email = 
         "infinite.monkeys.with.keyboards@gmail.com"))
@@ -21,4 +21,4 @@ NeedsCompilation: yes
 VignetteBuilder: knitr
 LinkingTo: Rcpp
 SystemRequirements: C++11
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1

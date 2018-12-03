@@ -101,8 +101,8 @@ setMethod("show", signature("CyData"), function(object) {
 
 .raw_precomputed <- function(x) .raw_metadata(x)$precomputed
 
-#' @importFrom BiocNeighbors KmknnIndex_clustered_data
-.raw_cellIntensities <- function(x) KmknnIndex_clustered_data(.raw_precomputed(x))
+#' @importFrom BiocNeighbors bndata 
+.raw_cellIntensities <- function(x) bndata(.raw_precomputed(x))
 
 .raw_unusedIntensities <- function(x) .raw_metadata(x)$unused
 

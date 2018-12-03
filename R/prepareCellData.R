@@ -1,5 +1,5 @@
 #' @export
-#' @importFrom BiocNeighbors buildKmknn KmknnIndex_clustered_order
+#' @importFrom BiocNeighbors buildIndex bnorder
 #' @importFrom methods as
 #' @importFrom S4Vectors DataFrame
 #' @importFrom SingleCellExperiment int_metadata SingleCellExperiment
@@ -22,8 +22,8 @@ prepareCellData <- function(x, markers=NULL, ...)
 
     # Picking markers to use.
     used <- .chosen_markers(markers, marker.names)
-    reorg <- buildKmknn(exprs[,used,drop=FALSE], ...)
-    reorder <- KmknnIndex_clustered_order(reorg)
+    reorg <- buildIndex(exprs[,used,drop=FALSE], ...)
+    reorder <- bnorder(reorg)
   
     # Collating the output (constructing an SCE first to avoid CyData validity check).
     output <- SingleCellExperiment(colData=DataFrame(row.names=sample.names))

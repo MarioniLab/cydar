@@ -1,5 +1,5 @@
 #' @export
-#' @importFrom BiocNeighbors findKmknn findNeighbors buildKmknn
+#' @importFrom BiocNeighbors findKNN findNeighbors buildIndex
 #' @importFrom methods is
 spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
 # This controls the spatial FDR across a set of plot coordinates.
@@ -26,7 +26,7 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
         pvalues <- pvalues[haspval]
     }
 
-    pre <- buildKmknn(coords)
+    pre <- buildIndex(coords)
 
     # Defining the bandwidth.        
     if (is.null(bandwidth)) { 
@@ -37,7 +37,7 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
             stop("'neighbors' must be a non-negative integer") 
         } else { 
             # Figuring out the bandwidth for KDE, as the median of distances to the n-th neighbour.
-            distances <- findKmknn(precomputed=pre, k=neighbors, get.index=FALSE)$distance
+            distances <- findKNN(precomputed=pre, k=neighbors, get.index=FALSE)$distance
             bandwidth <- median(distances[,ncol(distances)])
         }
     } else {

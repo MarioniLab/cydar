@@ -51,7 +51,7 @@ test_that("CyData cell information getters work as expected", {
     cd2 <- prepareCellData(list(all.values1, all.values2), markers=chosen)
 
     out2 <- cellIntensities(cd2)
-    o <- BiocNeighbors::KmknnIndex_clustered_order(int_metadata(cd2)$cydar$precomputed)
+    o <- BiocNeighbors::bnorder(int_metadata(cd2)$cydar$precomputed)
     ref <- t(rbind(all.values1, all.values2))[,o]
     expect_identical(out2, ref[chosen,])
 
@@ -63,7 +63,7 @@ test_that("CyData cell information getters work as expected", {
     info <- cellInformation(cd)
     expect_identical(nrow(info), ncol(out))
 
-    o <- BiocNeighbors::KmknnIndex_clustered_order(int_metadata(cd)$cydar$precomputed)
+    o <- BiocNeighbors::bnorder(int_metadata(cd)$cydar$precomputed)
     expect_identical(info$sample, rep(1:2, c(ncells1, ncells2))[o])
     expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2))[o])
 
