@@ -6,7 +6,7 @@
 
 \usage{
 normalizeBatch(batch.x, batch.comp, mode="range", p=0.01, 
-    fix.zero=FALSE< target=NULL, markers=NULL, ...)
+    fix.zero=FALSE, target=NULL, markers=NULL, ...)
 }
 
 \arguments{
@@ -31,40 +31,10 @@ Consider an experiment containing several batches of barcoded samples, in which 
 This function normalizes the intensities for each marker such that they are comparable between samples in different batches.
 The process for each marker is as follows: 
 \enumerate{
-\item Weighting is performed to downweight the contribution of larger samples within each batch, as well as to match the composition of samples across different batches.
-The composition of each batch can be specified by \code{batch.comp}, see below for more details.
-The weighted intensities for each batch represents the pooled distribution of intensities from all samples in that batch.
-\item If \code{mode="range"}, a quantile function is constructed for the pooled distribution of each batch.
-A reference quantile function is obtained (see below), representing a reference distribution.
-The range of the reference distribution is computed at percentiles \code{p} and \code{1-p} (to avoid distortions due to outliers).
-A batch-specific scaling function is defined to equalize the range of the weighted distribution of intensities from each batch to the reference range.
-If \code{fix.zero=TRUE}, the lower bound of the range is always set to zero to avoid turning a zero intensity into a non-zero value after normalization.
-\item If \code{mode="quantile"}, a quantile function is constructed as described above, along with a reference quantile function.
-A batch-specific transformation function is defined to convert the quantiles for each batch to the corresponding quantiles of the reference.
-This is equivalent to coercing all batch-specific intensity distributions to the reference distribution.
-\item If \code{mode="warp"}, a mock set of intensities is generated is generated that accounts for the differential weighting of events in each batch. 
-This is used to construct a flowSet for use in warping normalization - see \code{?\link{normalization}} and \code{?\link[flowStats]{warpSet}} for details.
-A warping function is computed for each batch that equalizes the locations of landmarks (i.e., peaks) in both the batch-specific and reference intensity distributions.
-\item The transformation function is applied to the intensities of \emph{all} samples in that batch, yielding corrected intensities for direct comparisons between samples.
+\item Weight each batch by composition and number of cells.
+\item Compute a transformation function for each batch to a reference intensity distribution.
+\item Apply the batch-specific functions to that batch's samples to obtain normalized intensities.
 }
-
-Groupings can be specified as batch-specific factors in \code{batch.comp}, with at least one common group required across all batches.
-If the composition of each batch is the same, \code{batch.comp} can be set to \code{NULL} rather than being manually specified.
-This composition is used to weight the contribution of each sample to the reference distribution.
-For example, a batch with more samples in group A and fewer samples in group B would get lower weights assigned to the former and larger weights to the latter.
-
-Construction of the adjustment function relies on the presence of samples from the same group across the different batches.
-Ideally, all batches would contain samples from all groups, with similar total numbers of cells across batches for each group.
-The adjustment function will still be applied to intensities for samples from non-shared groups that do not contribute to the reference distribution.
-However, note that the adjustment may not be accurate if the to-be-corrected intensities lie outside the range of values used to construct the function.
-
-If \code{target=NULL}, the reference distribution for each marker is defined as an average of the relevant statistic across batches.
-For \code{mode="range"} or \code{mode="quantile"}, this means that the reference quantile function is defined as the average of the functions across all batches.
-For \code{mode="warp"}, the average location of each landmark across all batches is used.
-
-If \code{target} is not \code{NULL}, the specified batch will be used as the reference distribution.
-For \code{mode="range"} or \code{mode="quantile"}, this means that the reference quantile function will be defined as the quantile function of the chosen batch.
-Similarly, if \code{mode="warp"}, \code{\link[flowStats]{warpSet}} will align all other batches to the locations of the peaks in \code{target}.
 
 All markers are used by default when \code{markers=NULL}.
 If \code{markers} is specified, only the specified markers will be normalized and returned in the output expression matrices.
@@ -73,6 +43,53 @@ This is usually more convenient than subsetting the inputs or outputs manually.
 To convert the output into a format appropriate for \code{\link{prepareCellData}}, apply \code{\link{unlist}} with \code{recursive=FALSE}.
 This will generate a list of intensity matrices for all samples in all batches, rather than a list of list of matrices.
 Note that a batch effect should still be included in the design matrix when modelling abundances, as only the intensities are corrected here.
+}
+
+\section{Weighting within each batch}{
+Weighting is performed to downweight the contribution of larger samples within each batch, as well as to match the composition of samples across different batches.
+The composition of each batch can be specified by \code{batch.comp}, see below for more details.
+The weighted intensities for each batch represents the pooled distribution of intensities from all samples in that batch.
+
+Groupings can be specified as batch-specific factors in \code{batch.comp}, with at least one common group required across all batches.
+This composition is used to weight the contribution of each sample to the reference distribution.
+For example, a batch with more samples in group A and fewer samples in group B would get lower weights assigned to the former and larger weights to the latter.
+
+Ideally, all batches would contain samples from all groups, with similar total numbers of cells across batches for each group.
+This maximizes the number of samples that are used to construct the reference distribution (and thus the stability of the reference).
+Samples in groups that are not present in all batches will be ignored as no weighting can be applied to an absent group.
+
+If the composition of each batch is the same, \code{batch.comp} can be set to \code{NULL} rather than being manually specified.
+}
+
+\section{Transforming to a reference}{
+If \code{mode="range"}, a quantile function is constructed for the pooled distribution of each batch.
+These batch-specific functions are used to contruct a reference quantile function, representing a reference distribution.
+A batch-specific scaling function is defined to equalize the range of the weighted distribution of intensities from each batch to the range of this reference distribution.
+The range of each distribution is computed at percentiles \code{p} and \code{1-p} to avoid distortions due to outliers.
+If \code{fix.zero=TRUE}, the lower bound of the range is always set to zero to avoid turning a zero intensity into a non-zero value after normalization.
+
+If \code{mode="quantile"}, a quantile function is constructed as described above, along with a reference quantile function.
+A batch-specific transformation function is defined to convert the quantiles for each batch to the corresponding quantiles of the reference.
+This is equivalent to coercing all batch-specific intensity distributions to the reference distribution.
+
+If \code{mode="warp"}, a mock set of intensities is generated is generated that accounts for the differential weighting of events in each batch. 
+This is used to construct a flowSet for use in warping normalization - see \code{?\link{normalization}} and \code{?\link[flowStats]{warpSet}} for details.
+A warping function is computed for each batch that equalizes the locations of landmarks (i.e., peaks) in both the batch-specific and reference intensity distributions.
+
+If \code{target=NULL}, the reference distribution for each marker is defined as an average of the relevant statistic across batches.
+For \code{mode="range"} or \code{mode="quantile"}, this means that the reference quantile function is defined as the average of the functions across all batches.
+For \code{mode="warp"}, the average location of each landmark across all batches is used.
+
+If \code{target} is not \code{NULL}, the specified batch will be used as the reference distribution.
+For \code{mode="range"} or \code{mode="quantile"}, this means that the reference quantile function will be defined as the quantile function of the chosen batch.
+Similarly, if \code{mode="warp"}, \code{\link[flowStats]{warpSet}} will align all other batches to the locations of the peaks in \code{target}.
+}
+
+\section{Applying the transformation function}{ 
+The transformation function is applied to the intensities of \emph{all} samples in that batch, yielding corrected intensities for direct comparisons between samples.
+This is possible provided that there is at least one group that is present across all batches, in order to construct a common reference distribution.
+The assumption is that the batch effect in those shared groups is the same as that in the batch-specific groups.
+However, note that the adjustment may not be accurate if the to-be-corrected intensities lie outside the range of values used to construct the function.
 }
 
 \section{Choosing between normalization methods}{
