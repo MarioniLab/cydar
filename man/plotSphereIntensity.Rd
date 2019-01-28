@@ -7,7 +7,7 @@
 
 \usage{
 plotSphereIntensity(x, y, intensity, irange=NULL, 
-    length.out=100, pch=16, ...)
+    col.range=viridis(100), pch=16, ...)
 
 # Deprecated - all parameters passed to plotCellIntensity.
 plotCellIntensity(...)
@@ -17,7 +17,8 @@ plotCellIntensity(...)
 \item{x, y}{A numeric vector of coordinates for each hypersphere.}
 \item{intensity}{A numeric vector specifying the marker intensities for each hypersphere.}
 \item{irange}{A numeric vector of length 2, specifying the upper and lower bound for the intensities.}
-\item{length.out}{An integer scalar specifying the resolution of the colour bar.}
+\item{col.range}{A vector of colours specifying the colour scale to be used for increasing intensity.
+More values represent a higher-resolution scale.}
 \item{pch, ...}{Additional arguments to pass to \code{plot}.}
 }
 
@@ -30,8 +31,8 @@ Users should consider using \code{\link{intensityRanges}} to define appropriate 
 
 \value{
 A plot of the low-dimensional embedding of the hypersphere locations is made on the current graphics device.
-A vector of colours of length \code{length.out} is returned, containing the colour gradient used for the intensities.
-The vector names contains the numeric values associated with each colour.
+A vector of colours equal to \code{col.range} is returned, containing the colour gradient used for the intensities.
+The vector names contain the numeric values associated with each colour.
 This can be used to construct a colour bar with \code{\link{createColorBar}}.
 }
 
@@ -54,7 +55,6 @@ y <- rnorm(100)
 intensities <- rgamma(100, 2, 2)
 out <- plotSphereIntensity(x, y, intensities)
 
-out <- plotSphereIntensity(x, y, intensities, irange=c(0, 2))
 plot(0,0, type="n", axes=FALSE, ylab="", xlab="", ylim=c(-1, 1), xlim=c(-1, 0.5))
 createColorBar(out) 
 text(-0.6, 0, srt=90, "Intensity", cex=1.2)

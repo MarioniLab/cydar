@@ -6,8 +6,8 @@
 \description{Visualize hyperspheres in low-dimensional space, coloured by log-fold change in abundance for each hypersphere.}
 
 \usage{
-plotSphereLogFC(x, y, logFC, max.logFC=NULL, zero.col=0.8, 
-    length.out=100, pch=16, ...)
+plotSphereLogFC(x, y, logFC, max.logFC=NULL, zero.col="grey80",
+    left.col="blue", right.col="red",length.out=100, pch=16, ...)
 
 # Deprecated - all arguments passed to plotSphereLogFC.
 plotCellLogFC(...)
@@ -17,7 +17,9 @@ plotCellLogFC(...)
 \item{x, y}{A numeric vector of coordinates for each hypersphere.}
 \item{logFC}{A numeric vector of log-fold changes for each hypersphere.}
 \item{max.logFC}{A numeric scalar specifying the maximum absolute log-fold change.}
-\item{zero.col}{A numeric scalar between 0 and 1, specifying the greyscale intensity to represent a log-fold change of zero.}
+\item{zero.col}{A string specifying the colour to use at a log-fold change of zero.}
+\item{left.col}{A string specifying the colour to use at the most negative log-fold change.}
+\item{right.col}{A string specifying the colour to use at the most positive log-fold change.}
 \item{length.out}{An integer scalar specifying the resolution of the colour bar.}
 \item{pch, ...}{Additional arguments to pass to \code{plot}.}
 }
@@ -33,7 +35,7 @@ This preserves the resolution of colours for smaller log-fold changes.
 \value{
 A plot of the low-dimensional embedding of the hypersphere locations is made on the current graphics device.
 A vector of colours of length \code{length.out} is returned, containing the colour gradient used for the log-fold changes. 
-The vector names contains the numeric values associated with each colour.
+The vector name contains the numeric values associated with each colour.
 This can be used to construct a colour bar with \code{\link{createColorBar}}.
 }
 

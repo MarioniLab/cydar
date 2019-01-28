@@ -1,6 +1,7 @@
 #' @export
 #' @importFrom graphics plot
-plotSphereLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.out=100, pch=16, ...) 
+#' @importFrom grDevices col2rgb
+plotSphereLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col="grey80", left.col="blue", right.col="red", length.out=100, pch=16, ...) 
 # Visualizes the cells with appropriate coloration, using a PCA plot by default.
 #
 # written by Aaron Lun
@@ -14,7 +15,11 @@ plotSphereLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.ou
     }
 
     # Linear interpolator of colours.
-    logFC.col <- .interpolate_cols(logFC, max.logFC, left=c(0,0,1), middle=rep(zero.col, 3), right=c(1,0,0))
+    left.col <- col2rgb(left.col)[,1]/255
+    zero.col <- col2rgb(zero.col)[,1]/255
+    right.col <- col2rgb(right.col)[,1]/255
+
+    logFC.col <- .interpolate_cols(logFC, max.logFC, left=left.col, middle=zero.col, right=right.col)
 
     if (pch %in% 21:25) {           
         plot(x, y, pch=pch, bg=logFC.col, ...)
@@ -23,14 +28,15 @@ plotSphereLogFC <- function(x, y, logFC, max.logFC=NULL, zero.col=0.8, length.ou
     }
                           
     values <- seq(from=-max.logFC, to=max.logFC, length.out=length.out)
-    stored <- .interpolate_cols(values, max.logFC, left=c(0,0,1), middle=rep(zero.col, 3), right=c(1,0,0))
+    stored <- .interpolate_cols(values, max.logFC, left=left.col, middle=zero.col, right=right.col)
     names(stored) <- values
     return(invisible(stored))
 }
 
 #' @importFrom grDevices rgb
 .interpolate_cols <- function(val, max.val, left, middle, right) 
-# Need to account for the fact that RGB colors are squared.
+# Need to account for the fact that RGB values are square-rooted 
+# representations of the actual colour intensity.
 {
     prop <- val/max.val
     prop[prop < -1] <- -1
