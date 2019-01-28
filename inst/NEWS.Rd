@@ -4,6 +4,8 @@
 
 \section{Version 1.8.0}{\itemize{
 \item Modified the plotSphere*() functions for more flexibility in colour choice.
+
+\item Added fix.zero= option in normalizeBatch() for range-based normalization.
 }}
 
 \section{Version 1.6.0}{\itemize{
