@@ -2,6 +2,10 @@
 \title{cydar News}
 \encoding{UTF-8}
 
+\section{Version 1.8.0}{\itemize{
+\item Modified the plotSphere*() functions for more flexibility in colour choice.
+}}
+
 \section{Version 1.6.0}{\itemize{
 \item Restructured the CyData class for simplicity and internal fields.
 
