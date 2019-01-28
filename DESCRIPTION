@@ -10,7 +10,7 @@ Imports: viridis, methods, shiny, graphics, stats, grDevices, utils,
         SummarizedExperiment
 Suggests: ncdfFlow, testthat, knitr, edgeR, limma, glmnet, BiocStyle,
         flowStats
-biocViews: FlowCytometry, MultipleComparison, Proteomics, SingleCell
+biocViews: ImmunoOncology, FlowCytometry, MultipleComparison, Proteomics, SingleCell
 Description: Identifies differentially abundant populations between
         samples and groups in mass cytometry data. Provides methods for
         counting cells into hyperspheres, controlling the spatial false
