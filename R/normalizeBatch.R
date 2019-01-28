@@ -1,5 +1,5 @@
 #' @export
-normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NULL, markers=NULL, ...)
+normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, fix.zero=FALSE, target=NULL, markers=NULL, ...)
 # Performs warp- or range-based adjustment of different batches, given a 
 # list of 'x' objects like that used for 'prepareCellData'
 # and another list specifying the composition of samples per batch.
@@ -84,7 +84,7 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
         } else if (curmode=="warp") { 
             converters <- .transformDistr(all.obs, all.wts, m, target=target, ...)
         } else if (curmode=="range") {
-            converters <- .rescaleDistr(all.obs, all.wts, target=target, p=p)
+            converters <- .rescaleDistr(all.obs, all.wts, target=target, p=p, fix.zero=fix.zero)
         } else if (curmode=="quantile") {
             converters <- .quantileDistr(all.obs, all.wts, target=target)
         }
@@ -224,14 +224,16 @@ normalizeBatch <- function(batch.x, batch.comp, mode="range", p=0.01, target=NUL
 }
 
 #' @importFrom stats lm approx
-.rescaleDistr <- function(all.obs, all.wts, target, p) {
+.rescaleDistr <- function(all.obs, all.wts, target, p, fix.zero=FALSE) {
     # Computing the average max/min (robustly).
     nbatches <- length(all.obs)
     batch.min <- batch.max <- numeric(nbatches)
     for (b in seq_len(nbatches)) { 
         ecdf.out <- .getECDF(all.obs[[b]], all.wts[[b]])
         out <- approx(ecdf.out$cumprob, ecdf.out$value, xout=c(p, 1-p), rule=2)$y
-        batch.min[b] <- out[1]
+        if (!fix.zero) {
+            batch.min[b] <- out[1]
+        }
         batch.max[b] <- out[2]
     }
 

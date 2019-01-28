@@ -181,6 +181,14 @@ test_that("Range-based normalization functions are correct", {
     for (b in seq_len(nbatches)) { 
         expect_equal(Q[,2], all.FUN[[b]](Q[,b]))
     }
+
+    # With fix.zero=TRUE.
+    Q <- mapply(weighted.quantile, all.obs, all.wts, MoreArgs=list(p=0.95))
+    all.FUN <- cydar:::.rescaleDistr(all.obs, all.wts, target=NULL, p=0.05, fix.zero=TRUE)
+    for (b in seq_len(nbatches)) { 
+        expect_equal(0, unname(all.FUN[[b]](0)))
+        expect_equal(mean(Q), unname(all.FUN[[b]](Q[b])))
+    }
 })
 
 test_that("Quantile normalization functions are correct", {

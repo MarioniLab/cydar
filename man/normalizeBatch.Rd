@@ -6,7 +6,7 @@
 
 \usage{
 normalizeBatch(batch.x, batch.comp, mode="range", p=0.01, 
-    target=NULL, markers=NULL, ...)
+    fix.zero=FALSE< target=NULL, markers=NULL, ...)
 }
 
 \arguments{
@@ -20,6 +20,7 @@ A string or character vector of length equal to the number of markers, specifyin
 This can take values of \code{"range"}, \code{"warp"}, \code{"quantile"} or \code{"none"} (in which case no normalization is performed).
 }
 \item{p}{A numeric scalar between 0 and 0.5, specifying the percentile used to define the range of the distribution for range-based normalization.}
+\item{fix.zero}{A logical scalar indicating whether zero intensities should remain at zero when \code{mode="range"}.}
 \item{target}{An integer scalar indicating the reference batch.}
 \item{markers}{A character vector specifying the markers to be normalized and returned.}
 \item{...}{Additional arguments to be passed to \code{\link[flowStats]{warpSet}} for \code{mode="warp"}.}
@@ -37,6 +38,7 @@ The weighted intensities for each batch represents the pooled distribution of in
 A reference quantile function is obtained (see below), representing a reference distribution.
 The range of the reference distribution is computed at percentiles \code{p} and \code{1-p} (to avoid distortions due to outliers).
 A batch-specific scaling function is defined to equalize the range of the weighted distribution of intensities from each batch to the reference range.
+If \code{fix.zero=TRUE}, the lower bound of the range is always set to zero to avoid turning a zero intensity into a non-zero value after normalization.
 \item If \code{mode="quantile"}, a quantile function is constructed as described above, along with a reference quantile function.
 A batch-specific transformation function is defined to convert the quantiles for each batch to the corresponding quantiles of the reference.
 This is equivalent to coercing all batch-specific intensity distributions to the reference distribution.
