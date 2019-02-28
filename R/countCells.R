@@ -21,7 +21,7 @@ countCells <- function(x, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=
     # Only collating hyperspheres around every '10th' cell, for speed.
     pre <- .raw_precomputed(x)
     chosen <- .downsample(x, downsample)
-    ci <- findNeighbors(precomputed=pre, threshold=distance, BPPARAM=BPPARAM, 
+    ci <- findNeighbors(BNINDEX=pre, threshold=distance, BPPARAM=BPPARAM, 
         raw.index=TRUE, subset=chosen, get.distance=FALSE)$index
 
     # Filtering out low-abundance hyperspheres to avoid creating large matrices.

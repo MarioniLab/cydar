@@ -37,7 +37,7 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
             stop("'neighbors' must be a non-negative integer") 
         } else { 
             # Figuring out the bandwidth for KDE, as the median of distances to the n-th neighbour.
-            distances <- findKNN(precomputed=pre, k=neighbors, get.index=FALSE)$distance
+            distances <- findKNN(BNINDEX=pre, k=neighbors, get.index=FALSE)$distance
             bandwidth <- median(distances[,ncol(distances)])
         }
     } else {
@@ -50,7 +50,7 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
     }
 
     # Computing densities with a tricube kernel.
-    dist2neighbors <- findNeighbors(precomputed=pre, threshold=bandwidth, get.index=FALSE)$distance
+    dist2neighbors <- findNeighbors(BNINDEX=pre, threshold=bandwidth, get.index=FALSE)$distance
     densities <- .Call(cxx_compute_density, dist2neighbors, bandwidth)
     w <- 1/densities
 

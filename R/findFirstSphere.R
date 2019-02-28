@@ -33,7 +33,7 @@ findFirstSphere <- function(x, pvalues, threshold=1, block=NULL)
     # Using findNeighbors to screen out candidates based on the enclosing hypersphere.
     pre <- buildIndex(x)
     MULT <- max(1, sqrt(nrow(x)))
-    potential <- findNeighbors(precomputed=pre, threshold=threshold * MULT, get.distance=FALSE, raw.index=TRUE)$index
+    potential <- findNeighbors(BNINDEX=pre, threshold=threshold * MULT, get.distance=FALSE, raw.index=TRUE)$index
 
     reorder <- bnorder(pre)
     pvalues <- pvalues[reorder]

@@ -10,7 +10,7 @@ neighborDistances <- function(x, neighbors=50, downsample=50, as.tol=TRUE)
     to.check <- .downsample(x, downsample)
 
     # Computing distances.
-    distances <- findKNN(precomputed=pre, k=neighbors, get.index=FALSE, subset=to.check, raw.index=TRUE)$distance
+    distances <- findKNN(BNINDEX=pre, k=neighbors, get.index=FALSE, subset=to.check, raw.index=TRUE)$distance
 
     # Converting to tolerance values, if so desired.
     if (as.tol) {
