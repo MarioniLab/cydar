@@ -10,9 +10,11 @@ normalizeBatch(batch.x, batch.comp, mode="range", p=0.01,
 }
 
 \arguments{
-\item{batch.x}{A list, where each element is of the same type as \code{x} used in \code{\link{prepareCellData}} (i.e., a ncdfFlowSet or a list of intensity matrices across all samples).}
-\item{batch.comp}{
-A list of factors (or elements coercible to factors) specifying the composition of each batch, i.e., which samples belong to which groups.
+\item{batch.x}{A list of length equal to the number of batches.
+Each element of the list should be of the same type as \code{x} used in \code{\link{prepareCellData}}.} 
+\item{batch.comp}{A list of length equal to the number of batches.
+Each element should be a factor (or coercible to a factor) specifying the composition of each batch, 
+i.e., which samples belong to which groups.
 Also can be \code{NULL}, see below.
 }
 \item{mode}{
@@ -35,6 +37,16 @@ The process for each marker is as follows:
 \item Compute a transformation function for each batch to a reference intensity distribution.
 \item Apply the batch-specific functions to that batch's samples to obtain normalized intensities.
 }
+
+Each element of \code{batch.x} should contain data from all samples of a single batch.
+This can be a ncdfFlowSet constructed from all samples in that batch,
+or a list of intensity matrices from all samples.
+In short, each element should be equivalent to the \code{x} argument in \code{?\link{prepareCellData}}.
+
+Each element of \code{batch.comp} should correspond to the same batch as the entry at the same position of \code{batch.x}.
+Each element should be a factor of length equal to the number of samples in the associated batch.
+Each value of the factor specifies the group identity of a sample in the batch,
+and should follow the ordering of samples within the corresponding element of \code{batch.x}.
 
 All markers are used by default when \code{markers=NULL}.
 If \code{markers} is specified, only the specified markers will be normalized and returned in the output expression matrices.
