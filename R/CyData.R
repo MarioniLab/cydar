@@ -31,7 +31,7 @@ setValidity2("CyData", function(object) {
         msg <- c(msg, "total number of cells per sample should be a positive integer")
     }
 
-    raw_cid <- .raw_sample_id(object)
+    raw_cid <- .raw_cell_id(object)
     if (is.null(raw_cid) || !all(raw_cid > 0L & raw_cid <= object$totals[raw_sid])){ 
         msg <- c(msg, "missing or invalid cell IDs")
     }
@@ -62,8 +62,8 @@ setMethod("[", c("CyData", "ANY", "ANY"), function(x, i, j, ..., drop=TRUE) {
 
 #' @export
 setMethod("[<-", c("CyData", "ANY", "ANY", "CyData"), function(x, i, j, ..., value) {
-    if (!missing(j)) { 
-        .col_warning()
+    if (!missing(j)) {
+        stop("column replacement is not supported for 'CyData' objects")
     }
     callNextMethod()
 })

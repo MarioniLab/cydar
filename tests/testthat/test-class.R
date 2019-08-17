@@ -85,8 +85,5 @@ test_that("CyData column methods trigger warnings", {
     expect_identical(assay(out), assay(cn)[,1:2])
 
     blah <- cn
-    expect_warning(blah[,2] <- blah[,1], "columns are not independent")
-    XXX <- assay(cn, withDimnames=FALSE)
-    XXX[,2] <- XXX[,1] 
-    expect_identical(assay(blah, withDimnames=FALSE), XXX)
+    expect_error(blah[,2] <- blah[,1], "column replacement is not supported")
 })
