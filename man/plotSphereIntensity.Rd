@@ -1,6 +1,5 @@
 \name{plotSphereIntensity}
 \alias{plotSphereIntensity}
-\alias{plotCellIntensity}
 
 \title{Plot cell or hypersphere data}
 \description{Visualize cells or hyperspheres in low-dimensional space, coloured by marker intensities or log-fold changes.}
@@ -8,9 +7,6 @@
 \usage{
 plotSphereIntensity(x, y, intensity, irange=NULL, 
     col.range=viridis(100), pch=16, ...)
-
-# Deprecated - all parameters passed to plotCellIntensity.
-plotCellIntensity(...)
 }
 
 \arguments{

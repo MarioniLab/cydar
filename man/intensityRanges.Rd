@@ -15,7 +15,7 @@ intensityRanges(x, p=0.01)
 
 \details{
 For each marker, intensities across all cells are used to calculate the \code{p} and \code{1-p} quantiles.
-This defines the lower and upper bound, respectively, to use as the \code{irange} argument in \code{\link{plotCellIntensity}}.
+This defines the lower and upper bound, respectively, to use as the \code{irange} argument in \code{\link{plotSphereIntensity}}.
 The aim is to prevent extreme outliers from skewing the distribution of colours.
 This would result in loss of resolution at non-outlier values.
 

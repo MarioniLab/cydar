@@ -5,27 +5,27 @@ set.seed(200)
 x <- runif(1000)
 y <- runif(1000)
 
-test_that("plotCellLogFC works correctly", {
+test_that("plotSphereLogFC works correctly", {
     lfc <- rnorm(1000)
     
-    out <- plotCellLogFC(x, y, lfc)
+    out <- plotSphereLogFC(x, y, lfc)
     maxchange <- max(abs(lfc))
     expect_equal(maxchange, -as.double(head(names(out), 1)))
     expect_equal(maxchange, as.double(tail(names(out), 1)))
     
-    out <- plotCellLogFC(x, y, lfc, max.logFC=2)
+    out <- plotSphereLogFC(x, y, lfc, max.logFC=2)
     maxchange <- 2
     expect_equal(maxchange, -as.double(head(names(out), 1)))
     expect_equal(maxchange, as.double(tail(names(out), 1)))
 })
 
-test_that("plotCellIntensity works correctly", {
+test_that("plotSphereIntensity works correctly", {
     intensities <- rgamma(1000, 2, 2)
-    out <- plotCellIntensity(x, y, intensities)
+    out <- plotSphereIntensity(x, y, intensities)
     expect_equal(min(intensities), as.double(head(names(out), 1)))
     expect_equal(max(intensities), as.double(tail(names(out), 1)))
     
-    out <- plotCellIntensity(x, y, intensities, irange=c(1, 4))
+    out <- plotSphereIntensity(x, y, intensities, irange=c(1, 4))
     expect_equal(1, as.double(head(names(out), 1)))
     expect_equal(4, as.double(tail(names(out), 1)))
 })

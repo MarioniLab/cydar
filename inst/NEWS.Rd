@@ -2,6 +2,10 @@
 \title{cydar News}
 \encoding{UTF-8}
 
+\section{Version 1.10.0}{\itemize{
+\item Removed deprecated plotCell* functions.    
+}}
+
 \section{Version 1.8.0}{\itemize{
 \item Modified the plotSphere*() functions for more flexibility in colour choice.
 

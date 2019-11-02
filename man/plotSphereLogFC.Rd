@@ -1,6 +1,5 @@
 \name{plotSphereLogFC}
 \alias{plotSphereLogFC}
-\alias{plotCellLogFC}
 
 \title{Plot changes in hypersphere abundance}
 \description{Visualize hyperspheres in low-dimensional space, coloured by log-fold change in abundance for each hypersphere.}
@@ -8,9 +7,6 @@
 \usage{
 plotSphereLogFC(x, y, logFC, max.logFC=NULL, zero.col="grey80",
     left.col="blue", right.col="red",length.out=100, pch=16, ...)
-
-# Deprecated - all arguments passed to plotSphereLogFC.
-plotCellLogFC(...)
 }
 
 \arguments{

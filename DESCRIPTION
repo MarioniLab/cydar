@@ -1,6 +1,6 @@
 Package: cydar
-Version: 1.11.0
-Date: 2019-08-16
+Version: 1.11.1
+Date: 2019-11-01
 Title: Using Mass Cytometry for Differential Abundance Analyses
 Authors@R: c(person("Aaron", "Lun", role=c("aut", "cre"), email = 
         "infinite.monkeys.with.keyboards@gmail.com"))
