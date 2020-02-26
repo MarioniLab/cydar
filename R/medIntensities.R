@@ -25,7 +25,7 @@ medIntensities <- function(x, markers)
     chosen.leftovers <- all.leftovers[keep]
     old.names <- assayNames(x)
     for (j in seq_along(chosen.leftovers)) { 
-        assay(x, length(old.names)+j) <- out[[j]]
+        assay(x, length(old.names)+j, withDimnames=FALSE) <- out[[j]]
     }
     assayNames(x) <- c(old.names, sprintf("med.%s", chosen.leftovers))
     return(x)
