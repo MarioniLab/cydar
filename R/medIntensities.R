@@ -20,14 +20,15 @@ medIntensities <- function(x, markers)
     keep <- all.leftovers %in% selected
 
     unused <- .raw_unusedIntensities(x)[keep,,drop=FALSE]
-    out <- median_int_by_sample(.raw_cellAssignments(x), t(unused), .raw_sample_id(x), ncol(x))
+    out <- median_int_by_sample(t(unused), .raw_cellAssignments(x), .raw_sample_id(x), ncol(x))
     
     chosen.leftovers <- all.leftovers[keep]
     old.names <- assayNames(x)
     for (j in seq_along(chosen.leftovers)) { 
-        assay(x, length(old.names)+j) <- out[[j]]
+        assay(x, length(old.names)+j, withDimnames=FALSE) <- out[[j]]
     }
     assayNames(x) <- c(old.names, sprintf("med.%s", chosen.leftovers))
-    return(x)
+
+    x
 }
 

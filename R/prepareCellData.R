@@ -10,7 +10,7 @@
 #' @param ... Additional arguments to pass to \code{\link{buildIndex}}.
 #'
 #' @details
-#' This function constructs a \link{BiocNeighborIndex} object from the marker intensities of each cell in one or more samples.
+#' This function constructs a \linkS4class{BiocNeighborIndex} object from the marker intensities of each cell in one or more samples.
 #' The precomputed index is used to speed up downstream nearest-neighbour searching,
 #' avoiding redundant work from repeated calls to \code{\link{countCells}} (e.g., with different values of \code{tol}).
 #' 
