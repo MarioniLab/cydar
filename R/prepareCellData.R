@@ -71,7 +71,7 @@ prepareCellData <- function(x, markers=NULL, ...) {
     exprs <- do.call(rbind, exprs.list)
     ncells.per.sample <- vapply(exprs.list, FUN=nrow, FUN.VALUE=0L)
     sample.id <- rep(seq_along(exprs.list), ncells.per.sample)
-    cell.id <- unlist(lapply(exprs.list, FUN=function(exprs) seq_len(nrow(exprs)) ))
+    cell.id <- unlist(lapply(ncells.per.sample, seq_len), use.names=FALSE)
 
     # Picking markers to use.
     used <- .chosen_markers(markers, marker.names)
@@ -112,7 +112,7 @@ prepareCellData <- function(x, markers=NULL, ...) {
             if (is.null(tmp)) { stop("column names must be labelled with marker identities"); }
             stopifnot(identical(tmp, marker.names))
         }
-        expr.val <- x
+        expr.val <- unname(x)
 
     } else if (is(x, "ncdfFlowSet")) {
         sample.names <- sampleNames(x)
