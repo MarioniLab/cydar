@@ -6,7 +6,7 @@ Rcpp::IntegerMatrix count_cells(Rcpp::List assignments, Rcpp::NumericVector samp
     const int ngroups=assignments.size();
     const int ncells=sample_id.size();
     for (const auto& cursample : sample_id) { 
-        if (cursample <= 0 || cursample > nsamples) {
+        if (cursample < 0 || cursample >= nsamples) {
             throw std::runtime_error("sample IDs out of range");
         }
     }

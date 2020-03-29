@@ -80,7 +80,7 @@
 #' @importFrom SingleCellExperiment int_elementMetadata int_metadata int_colData SingleCellExperiment
 countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10) {
     bdx <- prepared$precomputed
-    distance <- tol * sqrt(nrow(bdx))
+    distance <- tol * sqrt(ncol(bdx))
     if (distance <= 0) {
         warning("setting a non-positive distance to a small offset")
         distance <- 1e-8
@@ -96,13 +96,17 @@ countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, 
     ci <- ci[keep]
     chosen <- chosen[keep]
         
-    # Computing the associated statistics.
+    # Computing the counts.
     sample.id <- prepared$sample.id - 1L
     nsamples <- nrow(prepared$colData)
     out.counts <- count_cells(ci, sample.id, nsamples)
     out.counts <- t(out.counts)
 
-    sample.weights <- tabulate(prepared$sample.id, nbins=nsamples)
+    # Computing the median intensities (transposing for column-major acesss,
+    # sorting the indices to reduce cache misses).
+    ci <- lapply(ci, sort)
+    sample.weights <- 1/tabulate(prepared$sample.id, nbins=nsamples)
+
     med.used <- weighted_median_int(t(bndata(bdx)), ci, sample.id, sample.weights)
     med.used <- t(med.used)
     med.unused <- weighted_median_int(t(prepared$unused), ci, sample.id, sample.weights)
