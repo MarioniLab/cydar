@@ -40,11 +40,11 @@ Aaron Lun
 }
 
 \examples{
-example(prepareCellData, echo=FALSE) # Using the mocked-up data set.
-bounds <- intensityRanges(cd)
+example(countCells, echo=FALSE) # Using the mocked-up data set.
+bounds <- intensityRanges(cnt)
 
 # Plotting example (using a subset for fast PCA).
-cd.subset <- t(cellIntensities(cd)[,1:1000])
+cd.subset <- t(cellIntensities(cnt)[,1:1000])
 coords <- prcomp(cd.subset)
 
 chosen.marker <- 5

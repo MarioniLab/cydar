@@ -2,6 +2,14 @@
 \title{cydar News}
 \encoding{UTF-8}
 
+\section{Version 1.12.0}{\itemize{
+\item \code{prepareCellData()} now returns a List rather than a half-complete CyData object.
+\item \code{expandRadius()} and \code{neighborDistances()} work explicitly on the List produced by \code{prepareCellData()}.
+\item \code{countCells()} will compute weighted-median intensities for unused markers as well.
+Minor bugfix to avoid stochastic results due to numerical imprecision when computing medians.
+\item \code{intensities()} has a new \code{mode=} argument to return intensities for unused markers.
+}}
+
 \section{Version 1.10.0}{\itemize{
 \item Removed deprecated plotCell* functions.    
 }}

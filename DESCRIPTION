@@ -1,13 +1,27 @@
 Package: cydar
-Version: 1.11.1
-Date: 2019-11-01
+Version: 1.11.2
+Date: 2020-03-29
 Title: Using Mass Cytometry for Differential Abundance Analyses
 Authors@R: c(person("Aaron", "Lun", role=c("aut", "cre"), email = 
         "infinite.monkeys.with.keyboards@gmail.com"))
-Depends: BiocParallel, SingleCellExperiment
-Imports: viridis, methods, shiny, graphics, stats, grDevices, utils,
-        BiocGenerics, S4Vectors, flowCore, Biobase, Rcpp, BiocNeighbors, 
-        SummarizedExperiment
+Depends: 
+    SingleCellExperiment
+Imports: 
+    viridis, 
+    methods, 
+    shiny, 
+    graphics, 
+    stats, 
+    grDevices, 
+    utils,
+    BiocGenerics, 
+    S4Vectors, 
+    BiocParallel, 
+    SummarizedExperiment,
+    flowCore, 
+    Biobase, 
+    Rcpp, 
+    BiocNeighbors
 Suggests: ncdfFlow, testthat, knitr, edgeR, limma, glmnet, BiocStyle,
         flowStats
 biocViews: ImmunoOncology, FlowCytometry, MultipleComparison, Proteomics, SingleCell
@@ -21,4 +35,4 @@ NeedsCompilation: yes
 VignetteBuilder: knitr
 LinkingTo: Rcpp
 SystemRequirements: C++11
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
