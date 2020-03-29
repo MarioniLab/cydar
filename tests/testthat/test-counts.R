@@ -104,7 +104,7 @@ test_that("countCells handles marker selection", {
     
     expect_identical(assay(cn), assay(ref))
     expect_identical(intensities(cn), intensities(ref))
-    expect_identical(intensities(cn, "unused"), intensities(cn))
+    expect_identical(unname(intensities(cn, "unused")), unname(intensities(cn)))
 })
 
 set.seed(10001)

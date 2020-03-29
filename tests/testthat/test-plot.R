@@ -34,20 +34,21 @@ test_that("intensityRanges works correctly", {
     stuff <- list(A=matrix(rgamma(10000, 2, 2), ncol=20))
     colnames(stuff$A) <- paste0("X", seq_len(ncol(stuff$A)))
     cd <- prepareCellData(stuff)
+    cn <- countCells(cd)
     
-    x <- intensityRanges(cd, p=0.01)
+    x <- intensityRanges(cn, p=0.01)
     ref <- apply(stuff$A, 2, quantile, p=c(0.01, 0.99))
     rownames(ref) <- c("min", "max")
     expect_equal(x, ref)
     
-    x <- intensityRanges(cd, p=0.05)
+    x <- intensityRanges(cn, p=0.05)
     ref <- apply(stuff$A, 2, quantile, p=c(0.05, 0.95))
     rownames(ref) <- c("min", "max")
     expect_equal(x, ref)
 
     # Works when there are only a subset of markers in use.
     cd <- prepareCellData(stuff, markers=c("X1", "X10"))
-    alt <- intensityRanges(cd, p=0.05)
+    alt <- intensityRanges(cn, p=0.05)
     expect_identical(x[,colnames(alt)], alt)
-    expect_identical(colnames(alt), markernames(cd, mode="all"))
+    expect_identical(colnames(alt), markernames(cn, mode="all"))
 })

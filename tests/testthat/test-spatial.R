@@ -11,7 +11,7 @@ test_that("Density calculation works correctly", {
     d2n <- BiocNeighbors::findKNN(coords, k=50, get.index=FALSE)$distance
     bandwidth <- median(d2n[,50])
     refbands <- BiocNeighbors::findNeighbors(coords, threshold=bandwidth, get.index=FALSE)$distance
-    densities <- .Call(cydar:::cxx_compute_density, refbands, bandwidth)
+    densities <- cydar:::compute_density(refbands, bandwidth)
 
     refdist <- as.matrix(dist(coords))
     diag(refdist) <- 0
