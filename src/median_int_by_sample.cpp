@@ -4,7 +4,8 @@
 #include <vector>
 #include <deque>
 
-SEXP weighted_median_int(
+// [[Rcpp::export(rng=false)]]
+Rcpp::List median_int_by_sample(
     Rcpp::NumericMatrix exprs,
     Rcpp::List assignments,
     Rcpp::NumericVector sample_id,

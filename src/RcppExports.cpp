@@ -41,6 +41,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// median_int_by_sample
+Rcpp::List median_int_by_sample(Rcpp::NumericMatrix exprs, Rcpp::List assignments, Rcpp::NumericVector sample_id, int nsamples);
+RcppExport SEXP _cydar_median_int_by_sample(SEXP exprsSEXP, SEXP assignmentsSEXP, SEXP sample_idSEXP, SEXP nsamplesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type exprs(exprsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type assignments(assignmentsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type sample_id(sample_idSEXP);
+    Rcpp::traits::input_parameter< int >::type nsamples(nsamplesSEXP);
+    rcpp_result_gen = Rcpp::wrap(median_int_by_sample(exprs, assignments, sample_id, nsamples));
+    return rcpp_result_gen;
+END_RCPP
+}
 // weighted_median_int
 SEXP weighted_median_int(Rcpp::NumericMatrix exprs, Rcpp::List assignments, Rcpp::NumericVector sample_id, Rcpp::NumericVector sample_weight);
 RcppExport SEXP _cydar_weighted_median_int(SEXP exprsSEXP, SEXP assignmentsSEXP, SEXP sample_idSEXP, SEXP sample_weightSEXP) {
@@ -59,6 +72,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cydar_compute_density", (DL_FUNC) &_cydar_compute_density, 2},
     {"_cydar_count_cells", (DL_FUNC) &_cydar_count_cells, 3},
     {"_cydar_drop_redundant", (DL_FUNC) &_cydar_drop_redundant, 4},
+    {"_cydar_median_int_by_sample", (DL_FUNC) &_cydar_median_int_by_sample, 4},
     {"_cydar_weighted_median_int", (DL_FUNC) &_cydar_weighted_median_int, 4},
     {NULL, NULL, 0}
 };

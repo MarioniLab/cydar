@@ -13,6 +13,10 @@ drop_redundant <- function(intensities, ordering, assignments, threshold) {
     .Call(`_cydar_drop_redundant`, intensities, ordering, assignments, threshold)
 }
 
+median_int_by_sample <- function(exprs, assignments, sample_id, nsamples) {
+    .Call(`_cydar_median_int_by_sample`, exprs, assignments, sample_id, nsamples)
+}
+
 weighted_median_int <- function(exprs, assignments, sample_id, sample_weight) {
     .Call(`_cydar_weighted_median_int`, exprs, assignments, sample_id, sample_weight)
 }
