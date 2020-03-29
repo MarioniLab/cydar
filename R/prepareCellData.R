@@ -1,15 +1,68 @@
+#' Prepare mass cytometry data
+#'
+#' Convert single-cell marker intensities from a mass cytometry experiment into a format for efficient counting.
+#' 
+#' @param x A named list of numeric matrices, 
+#' where each matrix corresponds to a sample and contains expression intensities for each cell (row) and each marker (column).
+#'
+#' Alternatively, a ncdfFlowSet object containing the same information.
+#' @param markers A character vector containing the names of the markers to use in downstream analyses.
+#' @param ... Additional arguments to pass to \code{\link{buildIndex}}.
+#'
+#' @details
+#' This function constructs a \link{BiocNeighborIndex} object from the marker intensities of each cell in one or more samples.
+#' This function is used to precompute internal structures for downstream nearest-neighbour searching,
+#' avoiding redundant work from repeated calls to \code{\link{countCells}}.
+#' 
+#' If \code{markers} is specified, only the selected markers will be used in the precomputation.
+#' This restricts the markers that are used in downstream functions - 
+#' namely, \code{\link{countCells}} and \code{\link{neighborDistances}}.
+#' By default, \code{markers=NULL} which means that all supplied markers will be used.
+#' 
+#' Markers that are \emph{not} in \code{markers} will be ignored in distance calculations.
+#' However, their intensities are still stored in the output object, for use in functions like \code{\link{medIntensities}}.
+#' 
+#' @return 
+#' A \linkS4class{List} containing precomputed values for use in \code{\link{countCells}}.
+#' This includes:
+#' \itemize{
+#' \item \code{precomputed}, a \linkS4class{BiocNeighborIndex} object containing a pre-built index for the neighbor search.
+#' \item \code{sample.id}, an integer vector specifying the sample of origin for each cell in \code{precomputed}.
+#' \item \code{cell.id}, an integer vector specifying the original index in 
+#' the corresponding sample of \code{x} for each cell in \code{precomputed}.
+#' \item \code{unused}, a matrix of intensity values for markers \emph{not} in \code{markers}.
+#' \item \code{colData}, a \linkS4class{DataFrame} containing per-sample statistics.
+#' }
+#'
+#' @author Aaron Lun
+#' 
+#' @examples
+#' ### Mocking up some data: ###
+#' nmarkers <- 20
+#' marker.names <- paste0("X", seq_len(nmarkers))
+#' nsamples <- 8
+#' sample.names <- paste0("Y", seq_len(nsamples))
+#' 
+#' x <- list()
+#' for (i in sample.names) {
+#'     ex <- matrix(rgamma(nmarkers*1000, 2, 2), ncol=nmarkers, nrow=1000)
+#'     colnames(ex) <- marker.names
+#'     x[[i]] <- ex
+#' }
+#' 
+#' ### Running the function: ###
+#' cd <- prepareCellData(x)
+#' cd
+#'
+#' @seealso
+#' \code{\link{countCells}}, where the output of this function is used to obtain hypersphere counts.
+#'
 #' @export
 #' @importFrom BiocNeighbors buildIndex bnorder
 #' @importFrom methods as
-#' @importFrom S4Vectors DataFrame
+#' @importFrom S4Vectors DataFrame List
 #' @importFrom SingleCellExperiment int_metadata SingleCellExperiment
-prepareCellData <- function(x, markers=NULL, ...) 
-# Converts it into a format more suitable for high-speed analysis.
-# Also does k-means clustering to generate the necessary clusters.
-#
-# written by Aaron Lun
-# created 14 August 2016
-{
+prepareCellData <- function(x, markers=NULL, ...) {
     cell.data <- .pull_out_data(x)
     sample.names <-  cell.data$samples
     marker.names <- cell.data$markers
@@ -25,18 +78,14 @@ prepareCellData <- function(x, markers=NULL, ...)
     reorg <- buildIndex(exprs[,used,drop=FALSE], ...)
     reorder <- bnorder(reorg)
   
-    # Collating the output (constructing an SCE first to avoid CyData validity check).
-    output <- SingleCellExperiment(colData=DataFrame(row.names=sample.names))
-    int_metadata(output)$cydar <- list(
+    # Collating the output.
+    List(
         precomputed=reorg,
-        markers=list(used=marker.names[used], unused=marker.names[!used]),
         sample.id=sample.id[reorder],
         cell.id=cell.id[reorder],
-        unused=t(exprs[reorder,!used,drop=FALSE])
+        unused=t(exprs[reorder,!used,drop=FALSE]),
+        colData=DataFrame(row.names=sample.names, totals=ncells.per.sample)
     )
-
-    output$totals <- ncells.per.sample
-    as(output, "CyData")
 }
 
 #' @importFrom methods is
@@ -73,5 +122,6 @@ prepareCellData <- function(x, markers=NULL, ...)
     } else {
         stop("'cell.data' must be a list or ncdfFlowSet object") 
     }
-    return(list(samples=sample.names, markers=marker.names, exprs=expr.val))
+
+    list(samples=sample.names, markers=marker.names, exprs=expr.val)
 }

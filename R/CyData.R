@@ -148,14 +148,24 @@ setMethod("intensities", "CyData", function(x) {
     val
 })
 
+#' @importFrom BiocNeighbors bndata
+.get_used_markers <- function(x) {
+    rownames(bndata(.raw_precomputed(x)))
+}
+
+.get_unused_markers <- function(x) {
+    rownames(.raw_unusedIntensities(x))
+}
+
 #' @export
 #' @importFrom flowCore markernames
 setMethod("markernames", "CyData", function(object, mode=c("used", "all", "unused")) {
     mode <- match.arg(mode)
-    mdata <- .raw_metadata(object)$markers
-    switch(mode, used=mdata$used,
-        unused=mdata$unused,
-        all=c(mdata$used, mdata$unused))
+    switch(mode, 
+        used=.get_used_markers(object),
+        unused=.get_unused_markers(object),
+        all=c(.get_used_markers(object), .get_unused_markers(object))
+    )
 })
 
 #' @export
@@ -169,9 +179,8 @@ cellIntensities <- function(x, mode=c("used", "all", "unused")) {
     } else {
         val <- .raw_unusedIntensities(x)
     }
- 
-    rownames(val) <- markernames(x, mode=mode)
-    return(val) 
+
+    val
 }
 
 #' @export
