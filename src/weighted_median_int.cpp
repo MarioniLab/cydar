@@ -12,7 +12,6 @@ SEXP weighted_median_int(
     const size_t nmarkers=exprs.ncol();
     const size_t ncells=exprs.nrow();
     const int ngroups=assignments.size();
-    const int nsamples=sample_weight.size();
 
     if (sample_id.size()!=ncells) { 
         throw std::runtime_error("sample IDs should be an integer vector of length equal to the number of cells"); 
@@ -24,12 +23,12 @@ SEXP weighted_median_int(
     intensities.reserve(ncells);
 
     for (int g=0; g<ngroups; ++g) {
-        const Rcpp::IntegerVector curass=assignments[g];
+        Rcpp::IntegerVector curass=assignments[g];
             
         // Computing total weights.
         double total_weight=0;
-        for (const auto& c : curass) { 
-            const int& cursample=sample_id[c-1];
+        for (auto c : curass) { 
+            int cursample=sample_id[c-1];
             total_weight+=sample_weight[cursample];
         }
 
@@ -49,16 +48,24 @@ SEXP weighted_median_int(
             std::sort(intensities.begin(), intensities.end());
             double cumweight=0;
             size_t midpoint=0;
+            bool exactly_mid=false;
+
             for (; midpoint<intensities.size(); ++midpoint) {
                 cumweight += sample_weight[intensities[midpoint].second];
-                if (cumweight/total_weight >= 0.5) { break; }
+                double ratio=cumweight/total_weight;
+                if (ratio >= 0.49999999) {
+                    if (ratio <= 0.50000001) {
+                        exactly_mid=true;
+                    }
+                    break;
+                }
             }
    
             if (midpoint==intensities.size()) {
                 // Only possible if total_weights is zero. 
                 curcoords[mi]=R_NaReal;
             } else {
-                if (cumweight/total_weight==0.5) {
+                if (exactly_mid) {
                     curcoords[mi]=(intensities[midpoint].first + intensities[midpoint+1].first)/2;
                 } else {
                     curcoords[mi]=intensities[midpoint].first;                
