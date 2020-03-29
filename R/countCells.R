@@ -97,10 +97,16 @@ countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, 
     chosen <- chosen[keep]
         
     # Computing the associated statistics.
-    sample.id <- prepared$sample.id
-    out.stats <- .Call(cxx_compute_hyperstats, bndata(bdx), nrow(prepared$colData), sample.id - 1L, ci)
-    out.counts <- out.stats[[1]]
-    out.coords <- out.stats[[2]]
+    sample.id <- prepared$sample.id - 1L
+    nsamples <- nrow(prepared$colData)
+    out.counts <- count_cells(ci, sample.id, nsamples)
+    out.counts <- t(out.counts)
+
+    sample.weights <- tabulate(prepared$sample.id, nbins=nsamples)
+    med.used <- weighted_median_int(t(bndata(bdx)), ci, sample.id, sample.weights)
+    med.used <- t(med.used)
+    med.unused <- weighted_median_int(t(prepared$unused), ci, sample.id, sample.weights)
+    med.unused <- t(med.unused)
 
     # Creating a new object (creating a SCE first to circumvent the CyData validity check).
     output <- SingleCellExperiment(
@@ -109,9 +115,10 @@ countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, 
     )
 
     int_elementMetadata(output)$cydar <- DataFrame(
-        intensities=I(out.coords), 
+        intensities=I(med.used),
         cellAssignments=I(ci), 
-        center.cell=chosen
+        center.cell=chosen,
+        unused=I(med.unused)
     )
 
     prepared$colData <- NULL
@@ -120,5 +127,5 @@ countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, 
 
     # Reordering for various historical reasons.
     output <- as(output, "CyData")
-    output[order(sample.id[chosen], .raw_cell_id(output)[chosen]),]
+    output[order(.raw_sample_id(output)[chosen], .raw_cell_id(output)[chosen]),]
 }

@@ -37,7 +37,7 @@ findFirstSphere <- function(x, pvalues, threshold=1, block=NULL)
 
     reorder <- bnorder(pre)
     pvalues <- pvalues[reorder]
-    out <- .Call(cxx_drop_redundant, bndata(pre), order(pvalues) - 1L, potential, threshold)
+    out <- drop_redundant(bndata(pre), order(pvalues) - 1L, potential, threshold)
     out[reorder] <- out
     return(out)
 }

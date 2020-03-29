@@ -51,7 +51,7 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
 
     # Computing densities with a tricube kernel.
     dist2neighbors <- findNeighbors(BNINDEX=pre, threshold=bandwidth, get.index=FALSE)$distance
-    densities <- .Call(cxx_compute_density, dist2neighbors, bandwidth)
+    densities <- compute_density(dist2neighbors, bandwidth)
     w <- 1/densities
 
     # Computing a density-weighted q-value.

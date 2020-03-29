@@ -20,7 +20,7 @@ medIntensities <- function(x, markers)
     keep <- all.leftovers %in% selected
 
     unused <- .raw_unusedIntensities(x)[keep,,drop=FALSE]
-    out <- .Call(cxx_compute_median_int, unused, ncol(x), .raw_sample_id(x), .raw_cellAssignments(x))
+    out <- median_int_by_sample(.raw_cellAssignments(x), t(unused), .raw_sample_id(x), ncol(x))
     
     chosen.leftovers <- all.leftovers[keep]
     old.names <- assayNames(x)
