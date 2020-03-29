@@ -1,5 +1,75 @@
-## This sets up the CyData reference class.
-## This differs from a standard SE class only in that it raises warnings upon column subsetting and binding.
+#' CyData class and methods
+#'
+#' The CyData class is derived from the \linkS4class{SingleCellExperiment} class.
+#' It is intended to store the cell counts for each group of cells (rows) for each sample (columns).
+#' Groups are intended to be hyperspheres (see \code{\link{countCells}}) but could also be arbitrary clusters of cells.
+#' It also stores the median intensities for each group and the identity of cells in the groups, parallel to the rows.
+#' 
+#' CyData objects should not be created directly by users.
+#' The class has some strict validity conditions that are not easily satisfied by manual construction.
+#' Users should rely on functions like \code{\link{prepareCellData}} and \code{\link{countCells}} to create the objects.
+#' An overview of the CyData class and the available methods.
+#' 
+#' @section Getter functions for group-level data:
+#' In the following code chunks, \code{x} or \code{object} are CyData objects.
+#' \code{mode} is a string specifying the types of markers that should be returned;
+#' this defaults to only those markers that are used in \code{\link{prepareCellData}},
+#' but can also return the unused markers or all of them.
+#' 
+#' \itemize{
+#' \item \code{intensities(x, mode=c("used", "all", "unused")} 
+#' returns a numeric matrix of intensities for each group of cells (rows) and markers (columns).
+#' Rows of the output matrix correspond to rows of \code{x}.
+#' Values are returned for the markers specified by \code{mode} (see above).
+#' \item \code{cellAssignments(x)} returns a list of integer vectors, 
+#' where each vector corresponds to a row of \code{x} and contains the indices of the cells in that group.
+#' Indices refer to columns of \code{cellIntensities(x)}.
+#' \item \code{markernames(object, mode=c("used", "all", "unused"))}
+#' returns a character vector of the marker names, depending on \code{mode} (see above).
+#' \item \code{getCenterCell(x)} returns the index of the cell used at the center of each hypersphere.
+#' }
+#'
+#' @section Getter functions for cell-level data:
+#' In the following code chunks, \code{x} is a CyData object and \code{mode} is as previously described.
+#'
+#' \itemize{
+#' \item \code{cellIntensities(x, mode=c("used", "all", "unused"))} 
+#' returns a numeric matrix of intensities for each marker (row) and cell (column).
+#' \item \code{cellInformation(x)} returns a \linkS4class{DataFrame} with one row per cell.
+#' The \code{sample} field specifies the sample of origin for each cell,
+#' while the \code{cell} field specifies the original row index of that cell in its original sample.
+#' }
+#'
+#' @section Subsetting:
+#' The subsetting and combining behaviour of CyData objects is mostly the same as that of \linkS4class{SingleCellExperiment} objects.
+#' The only difference is that subsetting or combining CyData objects by column is not advisable.
+#' Indeed, attempting to do so will result in a warning from the associated methods.
+#' This is because the columns are usually not independent in contexts involving clustering cells across multiple samples.
+#' If a sample is to be removed, it is more appropriate to do so in the function that generates the CyData object (usually \code{\link{prepareCellData}}).
+#' 
+#' @examples
+#' example(countCells, echo=FALSE)
+#' 
+#' markernames(cnt)
+#' head(intensities(cnt))
+#' head(cellAssignments(cnt))
+#' 
+#' @author
+#' Aaron Lun
+#'
+#' @name CyData
+#' @aliases CyData-class
+#' markernames
+#' markernames,CyData-method
+#' cellAssignments
+#' cellInformation
+#' intensities
+#' getCenterCell
+#' [,CyData,ANY,ANY-method
+#' [<-,CyData,ANY,ANY,CyData-method
+#' cbind,CyData-method
+#' show,CyData-method
+NULL
 
 #' @export
 #' @importClassesFrom SingleCellExperiment SingleCellExperiment
@@ -77,19 +147,13 @@ setMethod("cbind", "CyData", function(..., deparse.level=1) {
 ################################################
 # Defining show methods.
 
-scat <- function(fmt, vals=character(), exdent=2, ...) {
-    vals <- ifelse(nzchar(vals), vals, "''")
-    lbls <- paste(S4Vectors:::selectSome(vals), collapse=" ")
-    txt <- sprintf(fmt, length(vals), lbls)
-    cat(strwrap(txt, exdent=exdent, ...), sep="\n")
-}
-
 #' @export
 #' @importFrom methods show
 #' @importFrom flowCore markernames
+#' @importFrom S4Vectors coolcat
 setMethod("show", signature("CyData"), function(object) {
     callNextMethod()
-    scat("markers(%d): %s\n", markernames(object))
+    coolcat("markers(%d): %s\n", markernames(object))
     cat(sprintf("cells: %i\n", nrow(.raw_precomputed(object))))
 })
 
@@ -121,36 +185,40 @@ setMethod("show", signature("CyData"), function(object) {
 ## Defining some getters for external use.
 
 #' @export
-setGeneric("cellAssignments", function(x) standardGeneric("cellAssignments"))
-
-#' @export
-setMethod("cellAssignments", "CyData", function(x) {
+cellAssignments <- function(x) {
     val <- .raw_cellAssignments(x)
     if (is.null(val)) {
         stop("cell assignments are not available in 'x', run 'countCells()'")
     }
     names(val) <- rownames(x)
-    return(val)
-})
+    val
+}
 
-#' @export
-setGeneric("intensities", function(x) standardGeneric("intensities"))
+.named_intensities <- function(x) {
+    out <- .raw_intensities(x)
+    colnames(out) <- .get_used_markers(x)
+    out
+}
+
+.named_unused_intensities <- function(x) {
+    out <- int_elementMetadata(x)$cydar$unused
+    colnames(out) <- .get_unused_markers(x)
+    out    
+}
 
 #' @export
 #' @importFrom flowCore markernames
-setMethod("intensities", "CyData", function(x) {
-    val <- .raw_intensities(x)
-    if (is.null(val)) {
-        stop("intensities are not available in 'x', run 'countCells()'")
-    }
-    colnames(val) <- markernames(x)
-    rownames(val) <- rownames(x)
-    val
-})
+intensities <- function(x, mode=c("used", "all", "unused")) {
+    mode <- match.arg(mode)
+    switch(mode, 
+        used=.named_intensities(x),
+        unused=.named_unused_intensities(x),
+        all=cbind(.named_intensities(x), .named_unused_intensities(x))
+    )
+}
 
-#' @importFrom BiocNeighbors bndata
 .get_used_markers <- function(x) {
-    rownames(bndata(.raw_precomputed(x)))
+    rownames(.raw_cellIntensities(x))
 }
 
 .get_unused_markers <- function(x) {
@@ -169,18 +237,13 @@ setMethod("markernames", "CyData", function(object, mode=c("used", "all", "unuse
 })
 
 #' @export
-#' @importFrom flowCore markernames
 cellIntensities <- function(x, mode=c("used", "all", "unused")) {
     mode <- match.arg(mode)
-    if (mode=="used") {
-        val <- .raw_cellIntensities(x)
-    } else if (mode=="all") {
-        val <- rbind(.raw_cellIntensities(x), .raw_unusedIntensities(x))
-    } else {
-        val <- .raw_unusedIntensities(x)
-    }
-
-    val
+    switch(mode,
+        used=.raw_cellIntensities(x),
+        all=rbind(.raw_cellIntensities(x), .raw_unusedIntensities(x)),
+        unused=.raw_unusedIntensities(x)
+    )
 }
 
 #' @export

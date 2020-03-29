@@ -9,15 +9,10 @@ ncells2 <- 2001
 all.values2 <- matrix(rnorm(ncells2*nmarkers, sd=1), nrow=ncells2, ncol=nmarkers)
 colnames(all.values2) <- colnames(all.values1)
 
-test_that("CyData getters work as expected", {
-    # Some of the getters fail correctly.
-    cd <- prepareCellData(list(all.values1, all.values2))
-    expect_identical(markernames(cd), colnames(all.values1))
-    expect_error(intensities(cd), "not available")
-    expect_error(cellAssignments(cd), "not available")
+cd <- prepareCellData(list(all.values1, all.values2))
+cn <- countCells(cd)
 
-    # All getters now work.
-    cn <- countCells(cd)
+test_that("CyData getters work as expected", {
     expect_identical(markernames(cn), colnames(all.values1))
     expect_type(intensities(cn), "double")
     expect_identical(dim(intensities(cn)), c(nrow(cn), as.integer(nmarkers)))
@@ -26,44 +21,41 @@ test_that("CyData getters work as expected", {
     # markernames() responds to subsetting.
     chosen <- c("X1", "X2")
     cd <- prepareCellData(list(all.values1, all.values2), markers=chosen)
-    expect_identical(markernames(cd), chosen)
-    expect_identical(markernames(cd, mode="all"), colnames(all.values1))
-    expect_identical(markernames(cd, mode="unused"), setdiff(colnames(all.values1), chosen))
-
     cn <- countCells(cd)
+
     expect_identical(markernames(cn), chosen)
     expect_identical(markernames(cn, mode="all"), colnames(all.values1))
     expect_identical(markernames(cn, mode="unused"), setdiff(colnames(all.values1), chosen))
+
+    expect_identical(colnames(intensities(cn)), chosen)
+    expect_identical(colnames(intensities(cn, mode="all")), colnames(all.values1))
+    expect_identical(colnames(intensities(cn, mode="unused")), setdiff(colnames(all.values1), chosen))
 })
 
 test_that("CyData cell information getters work as expected", {
-    # Testing cellIntensities().
-    cd <- prepareCellData(list(all.values1, all.values2))
-    cn <- countCells(cd, filter=1)
-
-    out <- cellIntensities(cd)
-    expect_identical(out, cellIntensities(cn))
-    expect_identical(out, cellIntensities(cn, mode="all"))
+    out <- cellIntensities(cn)
+    expect_identical(dim(out), c(as.integer(nmarkers), as.integer(ncells1+ncells2))) 
     expect_identical(dim(cellIntensities(cn, mode="unused")), c(0L, ncol(out)))
 
     # Testing with unused markers.
     chosen <- c("X2", "X7", "X8")
     cd2 <- prepareCellData(list(all.values1, all.values2), markers=chosen)
+    out2 <- countCells(cd2) 
 
-    out2 <- cellIntensities(cd2)
-    o <- BiocNeighbors::bnorder(int_metadata(cd2)$cydar$precomputed)
+    int2 <- cellIntensities(out2)
+    o <- BiocNeighbors::bnorder(cd2$precomputed)
     ref <- t(rbind(all.values1, all.values2))[,o]
-    expect_identical(out2, ref[chosen,])
+    expect_identical(int2, ref[chosen,])
 
     unused <- setdiff(rownames(ref), chosen)
-    expect_identical(cellIntensities(cd2, mode="all"), ref[c(chosen, unused),])
-    expect_identical(cellIntensities(cd2, mode="unused"), ref[unused,])
+    expect_identical(cellIntensities(out2, mode="all"), ref[c(chosen, unused),])
+    expect_identical(cellIntensities(out2, mode="unused"), ref[unused,])
 
     # Testing cellInformation().
-    info <- cellInformation(cd)
+    info <- cellInformation(cn)
     expect_identical(nrow(info), ncol(out))
 
-    o <- BiocNeighbors::bnorder(int_metadata(cd)$cydar$precomputed)
+    o <- BiocNeighbors::bnorder(cd$precomputed)
     expect_identical(info$sample, rep(1:2, c(ncells1, ncells2))[o])
     expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2))[o])
 
@@ -71,13 +63,9 @@ test_that("CyData cell information getters work as expected", {
     centers <- getCenterCell(cn)
     index <- info$row[centers]
     expect_true(all(index%%10==1L))
-    expect_error(getCenterCell(cd), "not available")
 })
 
 test_that("CyData column methods trigger warnings", {
-    cd <- prepareCellData(list(all.values1, all.values2))
-    cn <- countCells(cd)
-
     expect_warning(out <- cbind(cn, cn), "columns are not independent")
     expect_identical(assay(out), cbind(assay(cn), assay(cn)))
 
