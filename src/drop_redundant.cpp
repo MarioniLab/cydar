@@ -1,43 +1,40 @@
-#include "cydar.h"
-#include "utils.h"
+#include "Rcpp.h"
+#include <cmath>
+#include <stdexcept>
+#include <deque>
 
-SEXP drop_redundant (SEXP intensities, SEXP ordering, SEXP assignments, SEXP threshold) {
-    BEGIN_RCPP
-
-    const Rcpp::List Assignments(assignments);
-    const int ngroups=Assignments.size();
-
-    const Rcpp::IntegerVector Ordering(ordering);
-    if (Ordering.size()!=ngroups) {
+// [[Rcpp::export(rng=false)]]
+Rcpp::LogicalVector drop_redundant (Rcpp::NumericMatrix intensities, Rcpp::IntegerVector ordering, 
+    Rcpp::List assignments, double threshold) 
+{
+    const int ngroups=assignments.size();
+    if (ordering.size()!=ngroups) {
         throw std::runtime_error("length of 'ordering' is not equal to the number of groups");
     }
 
-    const Rcpp::NumericMatrix Intensities(intensities);
-    if (ngroups!=Intensities.ncol()) {
+    const int nmarkers=intensities.nrow();
+    if (ngroups!=intensities.ncol()) {
         throw std::runtime_error("length of 'ordering' is not equal to number of columns in 'intensities'");
     }
-    const int nmarkers=Intensities.nrow();
-
-    const double Threshold=check_numeric_scalar(threshold, "threshold");
 
     // Looking for points that are not redundant to points with lower p-values.
     Rcpp::LogicalVector output(ngroups);
     std::deque<bool> already_seen(ngroups, false);
 
-    for (auto o : Ordering) {
+    for (auto o : ordering) {
         if (already_seen[o]) { 
             continue; 
         }
         output[o]=1; 
-        auto curint=Intensities.column(o);
+        auto curint=intensities.column(o);
 
-        const Rcpp::IntegerVector neighbors=Assignments[o];
+        const Rcpp::IntegerVector neighbors=assignments[o];
         for (const auto& neigh : neighbors) {
-            auto neighint=Intensities.column(neigh - 1);
+            auto neighint=intensities.column(neigh - 1);
             bool is_within=true;
 
             for (int m=0; m<nmarkers; ++m) {
-                if (std::abs(neighint[m] - curint[m]) > Threshold) {
+                if (std::abs(neighint[m] - curint[m]) > threshold) {
                     is_within=false;
                     break;
                 }
@@ -50,6 +47,5 @@ SEXP drop_redundant (SEXP intensities, SEXP ordering, SEXP assignments, SEXP thr
     }
 
     return output;
-    END_RCPP
 }
 

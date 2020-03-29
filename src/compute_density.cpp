@@ -1,22 +1,18 @@
-#include "cydar.h"
-#include "utils.h"
+#include "Rcpp.h"
 
-SEXP compute_density (SEXP distances, SEXP radius) {
-    BEGIN_RCPP
-    const double rad=check_numeric_scalar(radius, "radius");
-    Rcpp::List Distances(distances);
-    Rcpp::NumericVector output(Distances.size());
+// [[Rcpp::export(rng=false)]]
+Rcpp::NumericVector compute_density (Rcpp::List distances, double radius) {
+    Rcpp::NumericVector output(distances.size());
 
-    for (size_t i=0; i<Distances.size(); ++i) {
-        Rcpp::NumericVector current_distances=Distances[i];
+    for (size_t i=0; i<distances.size(); ++i) {
+        Rcpp::NumericVector current_distances=distances[i];
         double& curdensity=(output[i]=0);
         for (const auto& d : current_distances) { 
-            const double ratio=d/rad;
+            const double ratio=d/radius;
             const double diffdist = 1 - ratio*ratio*ratio;
             curdensity += diffdist * diffdist * diffdist; // tricube weights.
         }
     }
     return output;
-    END_RCPP
 }
 
