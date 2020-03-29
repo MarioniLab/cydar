@@ -2,7 +2,7 @@
 #' 
 #' Count the number of cells from each sample lying inside hyperspheres in high-dimensional space.
 #' 
-#' @param x A \linkS4class{List} object produced by \code{\link{prepareCellData}}.
+#' @param prepared A \linkS4class{List} object produced by \code{\link{prepareCellData}}.
 #' @param tol A numeric scalar to be used as the scaling factor for the hypersphere radius.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying how parallelization 
 #' is to be performed in \code{\link{findNeighbors}}.

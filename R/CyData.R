@@ -64,8 +64,9 @@
 #' cellAssignments
 #' cellInformation
 #' intensities
+#' cellIntensities
 #' getCenterCell
-#' [,CyData,ANY,ANY-method
+#' [,CyData,ANY,ANY,ANY-method
 #' [<-,CyData,ANY,ANY,CyData-method
 #' cbind,CyData-method
 #' show,CyData-method

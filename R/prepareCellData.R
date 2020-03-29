@@ -11,8 +11,8 @@
 #'
 #' @details
 #' This function constructs a \link{BiocNeighborIndex} object from the marker intensities of each cell in one or more samples.
-#' This function is used to precompute internal structures for downstream nearest-neighbour searching,
-#' avoiding redundant work from repeated calls to \code{\link{countCells}}.
+#' The precomputed index is used to speed up downstream nearest-neighbour searching,
+#' avoiding redundant work from repeated calls to \code{\link{countCells}} (e.g., with different values of \code{tol}).
 #' 
 #' If \code{markers} is specified, only the selected markers will be used in the precomputation.
 #' This restricts the markers that are used in downstream functions - 
