@@ -1,11 +1,13 @@
 ---
 title: Detecting differentially abundant subpopulations in mass cytometry data
-author: Aaron Lun
+author: 
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
 package: cydar
 output: 
   BiocStyle::html_document
 vignette: >
-  %\VignetteIndexEntry{Detecting differentially abundant subpopulations in mass cytometry data}
+  %\VignetteIndexEntry{Detecting differential abundance}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}  
 ---
@@ -17,15 +19,9 @@ opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 ```{r setup, echo=FALSE, message=FALSE}
 library(cydar)
-register(SerialParam())
+BiocParallel::register(SerialParam())
 set.seed(100)
 ```
-
-# Detecting differentially abundant subpopulations in mass cytometry data
-Package: `r Rpackage("cydar")` <br />
-Author: Aaron Lun (alun@wehi.edu.au) <br />
-Last modified: 2017-03-21 <br />
-Compilation date: `r Sys.Date()`
 
 # Introduction
 
