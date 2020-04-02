@@ -19,7 +19,8 @@ opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 
 ```{r setup, echo=FALSE, message=FALSE}
 library(cydar)
-BiocParallel::register(SerialParam())
+library(BiocParallel)
+register(SerialParam())
 set.seed(100)
 ```
 
