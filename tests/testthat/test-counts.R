@@ -140,6 +140,7 @@ test_that("countCells responds to downsampling", {
 
 set.seed(10001)
 test_that("countCells handles parallelization", {
+    library(BiocParallel)
     suppressWarnings(cd <- prepareCellData(fs))
     cn <- countCells(cd, filter=0L, downsample=1L, tol=tol)
     
