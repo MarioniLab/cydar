@@ -58,10 +58,9 @@
 #' \code{\link{countCells}}, where the output of this function is used to obtain hypersphere counts.
 #'
 #' @export
-#' @importFrom BiocNeighbors buildIndex bnorder
+#' @importFrom BiocNeighbors buildIndex
 #' @importFrom methods as
 #' @importFrom S4Vectors DataFrame List
-#' @importFrom SingleCellExperiment int_metadata SingleCellExperiment
 prepareCellData <- function(x, markers=NULL, ...) {
     cell.data <- .pull_out_data(x)
     sample.names <-  cell.data$samples
@@ -73,17 +72,15 @@ prepareCellData <- function(x, markers=NULL, ...) {
     sample.id <- rep(seq_along(exprs.list), ncells.per.sample)
     cell.id <- unlist(lapply(ncells.per.sample, seq_len), use.names=FALSE)
 
-    # Picking markers to use.
     used <- .chosen_markers(markers, marker.names)
-    reorg <- buildIndex(exprs[,used,drop=FALSE], ...)
-    reorder <- bnorder(reorg)
+    used.exprs <- t(exprs[,used,drop=FALSE])
   
-    # Collating the output.
     List(
-        precomputed=reorg,
-        sample.id=sample.id[reorder],
-        cell.id=cell.id[reorder],
-        unused=t(exprs[reorder,!used,drop=FALSE]),
+        precomputed=buildIndex(used.exprs, transposed=TRUE, ...),
+        sample.id=sample.id,
+        cell.id=cell.id,
+        used=used.exprs,
+        unused=t(exprs[,!used,drop=FALSE]),
         colData=DataFrame(row.names=sample.names, totals=ncells.per.sample)
     )
 }
@@ -91,7 +88,6 @@ prepareCellData <- function(x, markers=NULL, ...) {
 #' @importFrom methods is
 #' @importFrom Biobase sampleNames 
 #' @importFrom BiocGenerics colnames
-#' @importFrom flowCore exprs
 .pull_out_data <- function(x)
 # Pulling out data so we don't have to rely on ncdfFlowSet input.
 {

@@ -4,7 +4,13 @@
 \alias{neighborDistances}
 \title{Compute distances to neighbors}
 \usage{
-neighborDistances(prepared, neighbors = 50, downsample = 50, as.tol = TRUE)
+neighborDistances(
+  prepared,
+  neighbors = 50,
+  downsample = 50,
+  as.tol = TRUE,
+  num.threads = 1
+)
 }
 \arguments{
 \item{prepared}{A \linkS4class{List} object containing a \linkS4class{BiocNeighborIndex} object,

@@ -1,7 +1,7 @@
 #' @export
 #' @importFrom BiocNeighbors findKNN findNeighbors buildIndex
 #' @importFrom methods is
-spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
+spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL, num.threads=1)
 # This controls the spatial FDR across a set of plot coordinates.
 # Each point is weighted by the reciprocal of its density, based on the specified 'radius'.
 # A frequency-weighted version of the BH method is then applied to the p-values.
@@ -10,7 +10,8 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
 # created 23 May 2016
 {
     if (is(x, "CyData")) {
-        coords <- .raw_intensities(x)
+        # Transposing as we need cells in the rows.
+        coords <- t(.raw_intensities(x))
     } else {
         coords <- x
     }
@@ -37,7 +38,7 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
             stop("'neighbors' must be a non-negative integer") 
         } else { 
             # Figuring out the bandwidth for KDE, as the median of distances to the n-th neighbour.
-            distances <- findKNN(BNINDEX=pre, k=neighbors, get.index=FALSE)$distance
+            distances <- findKNN(pre, k=neighbors, get.index=FALSE, num.threads=num.threads)$distance
             bandwidth <- median(distances[,ncol(distances)])
         }
     } else {
@@ -50,7 +51,7 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL)
     }
 
     # Computing densities with a tricube kernel.
-    dist2neighbors <- findNeighbors(BNINDEX=pre, threshold=bandwidth, get.index=FALSE)$distance
+    dist2neighbors <- findNeighbors(pre, threshold=bandwidth, num.threads=num.threads, get.index=FALSE)$distance
     densities <- compute_density(dist2neighbors, bandwidth)
     w <- 1/densities
 

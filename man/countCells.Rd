@@ -7,6 +7,7 @@
 countCells(
   prepared,
   tol = 0.5,
+  num.threads = 1,
   BPPARAM = SerialParam(),
   downsample = 10,
   filter = 10

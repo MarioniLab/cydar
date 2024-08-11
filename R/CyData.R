@@ -155,7 +155,7 @@ setMethod("cbind", "CyData", function(..., deparse.level=1) {
 setMethod("show", signature("CyData"), function(object) {
     callNextMethod()
     coolcat("markers(%d): %s\n", markernames(object))
-    cat(sprintf("cells: %i\n", nrow(.raw_precomputed(object))))
+    cat(sprintf("cells: %i\n", ncol(.raw_cellIntensities(object))))
 })
 
 ################################################
@@ -164,10 +164,7 @@ setMethod("show", signature("CyData"), function(object) {
 #' @importFrom SingleCellExperiment int_metadata
 .raw_metadata <- function(x) int_metadata(x)$cydar
 
-.raw_precomputed <- function(x) .raw_metadata(x)$precomputed
-
-#' @importFrom BiocNeighbors bndata 
-.raw_cellIntensities <- function(x) bndata(.raw_precomputed(x))
+.raw_cellIntensities <- function(x) .raw_metadata(x)$used
 
 .raw_unusedIntensities <- function(x) .raw_metadata(x)$unused
 
@@ -208,7 +205,6 @@ cellAssignments <- function(x) {
 }
 
 #' @export
-#' @importFrom flowCore markernames
 intensities <- function(x, mode=c("used", "all", "unused")) {
     mode <- match.arg(mode)
     switch(mode, 

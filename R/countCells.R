@@ -73,14 +73,16 @@
 #' cnt
 #' 
 #' @export
-#' @importFrom BiocNeighbors findNeighbors bndata
+#' @importFrom BiocNeighbors findNeighbors
 #' @importFrom BiocParallel SerialParam
 #' @importFrom SummarizedExperiment colData
 #' @importFrom S4Vectors metadata DataFrame
 #' @importFrom SingleCellExperiment int_elementMetadata int_metadata int_colData SingleCellExperiment
-countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, filter=10) {
+countCells <- function(prepared, tol=0.5, num.threads=1, BPPARAM=SerialParam(), downsample=10, filter=10) {
     bdx <- prepared$precomputed
-    distance <- tol * sqrt(ncol(bdx))
+
+    # Scaling to account for the number of used markers.
+    distance <- tol * sqrt(nrow(prepared$used))
     if (distance <= 0) {
         warning("setting a non-positive distance to a small offset")
         distance <- 1e-8
@@ -88,8 +90,18 @@ countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, 
     
     # Only collating hyperspheres around every n-th cell, for speed.
     chosen <- .downsample0(prepared$cell.id, downsample)
-    ci <- findNeighbors(BNINDEX=bdx, threshold=distance, BPPARAM=BPPARAM, 
-        raw.index=TRUE, subset=chosen, get.distance=FALSE)$index
+    ci <- findNeighbors(
+        bdx,
+        threshold=distance,
+        num.threads=num.threads,
+        BPPARAM=BPPARAM,
+        raw.index=TRUE,
+        subset=chosen,
+        get.distance=FALSE)$index
+
+    for (i in seq_along(ci)) {
+        ci[[i]] <- c(i, ci[[i]]) # adding the self back into its own list.
+    }
 
     # Filtering out low-abundance hyperspheres to avoid creating large matrices.
     keep <- lengths(ci) >= filter
@@ -107,7 +119,7 @@ countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, 
     ci <- lapply(ci, sort)
     sample.weights <- 1/tabulate(prepared$sample.id, nbins=nsamples)
 
-    med.used <- weighted_median_int(t(bndata(bdx)), ci, sample.id, sample.weights)
+    med.used <- weighted_median_int(t(prepared$used), ci, sample.id, sample.weights)
     med.used <- t(med.used)
     med.unused <- weighted_median_int(t(prepared$unused), ci, sample.id, sample.weights)
     med.unused <- t(med.unused)
@@ -126,6 +138,7 @@ countCells <- function(prepared, tol=0.5, BPPARAM=SerialParam(), downsample=10, 
     )
 
     prepared$colData <- NULL
+    prepared$precomputed <- NULL
     int_metadata(output)$cydar <- prepared
     int_metadata(output)$cydar$tol <- tol
 

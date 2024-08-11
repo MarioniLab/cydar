@@ -51,16 +51,14 @@
 #' 
 #' @export
 #' @importFrom stats lm.fit
-#' @importFrom BiocNeighbors bndata
 expandRadius <- function(prepared, design=NULL, tol=0.5) {
-    ci <- bndata(prepared$precomputed)
     sample.id <- prepared$sample.id
     nsamples <- nrow(prepared$colData)
 
     # Computing mean intensities for all (used) markers in all samples.
     all.means <- vector("list", nsamples)
     for (s in seq_len(nsamples)) { 
-        all.means[[s]] <- rowMeans(ci[,sample.id==s,drop=FALSE])
+        all.means[[s]] <- rowMeans(prepared$used[,sample.id==s,drop=FALSE])
     }
     all.means <- do.call(rbind, all.means)
     

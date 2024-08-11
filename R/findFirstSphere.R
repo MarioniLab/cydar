@@ -1,7 +1,7 @@
 #' @export
-#' @importFrom BiocNeighbors findNeighbors buildIndex bndata bnorder
+#' @importFrom BiocNeighbors findNeighbors buildIndex
 #' @importFrom methods is
-findFirstSphere <- function(x, pvalues, threshold=1, block=NULL)
+findFirstSphere <- function(x, pvalues, threshold=1, block=NULL, num.threads=1)
 # Returns a logical vector indicating which hyperspheres are redundant
 # within the specified distance threshold.
 #
@@ -14,7 +14,7 @@ findFirstSphere <- function(x, pvalues, threshold=1, block=NULL)
 
     if (is(x, "CyData")) {
         .check_cell_data(x)
-        x <- .raw_intensities(x)
+        x <- t(.raw_intensities(x)) # transposing as we need cells in the rows.
     }
 
     if (!is.null(block)) {
@@ -30,15 +30,11 @@ findFirstSphere <- function(x, pvalues, threshold=1, block=NULL)
         return(total.out)
     }
 
-    # Using findNeighbors to screen out candidates based on the enclosing hypersphere.
+    # Using findNeighbors to screen out candidates based on the hypersphere
+    # that encloses the hypercube that defines the minimum distance boundary.
     pre <- buildIndex(x)
-    MULT <- max(1, sqrt(nrow(x)))
-    potential <- findNeighbors(BNINDEX=pre, threshold=threshold * MULT, get.distance=FALSE, raw.index=TRUE)$index
-
-    reorder <- bnorder(pre)
-    pvalues <- pvalues[reorder]
-    out <- drop_redundant(bndata(pre), order(pvalues) - 1L, potential, threshold)
-    out[reorder] <- out
-    return(out)
+    MULT <- max(1, sqrt(ncol(x)))
+    potential <- findNeighbors(pre, threshold=threshold * MULT, get.distance=FALSE, num.theads=num.threads)$index
+    drop_redundant(x, order(pvalues) - 1L, potential, threshold)
 }
 
