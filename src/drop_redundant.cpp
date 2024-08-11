@@ -12,7 +12,7 @@ Rcpp::LogicalVector drop_redundant (Rcpp::NumericMatrix intensities, Rcpp::Integ
 
     const int nmarkers = intensities.nrow();
     if (ngroups != static_cast<int>(intensities.ncol())) {
-        throw std::runtime_error("length of 'ordering' is not equal to number of columns in 'intensities'");
+        throw std::runtime_error("length of 'ordering' is not equal to number of rows in 'intensities'");
     }
 
     // Looking for points that are not redundant to points with lower p-values.

@@ -1,5 +1,5 @@
 #' @export
-#' @importFrom BiocNeighbors findKNN findNeighbors buildIndex
+#' @importFrom BiocNeighbors findDistance findNeighbors buildIndex
 #' @importFrom methods is
 spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL, num.threads=1)
 # This controls the spatial FDR across a set of plot coordinates.
@@ -10,8 +10,7 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL, num.threads=1)
 # created 23 May 2016
 {
     if (is(x, "CyData")) {
-        # Transposing as we need cells in the rows.
-        coords <- t(.raw_intensities(x))
+        coords <- .raw_intensities(x)
     } else {
         coords <- x
     }
@@ -32,20 +31,20 @@ spatialFDR <- function(x, pvalues, neighbors=50, bandwidth=NULL, num.threads=1)
     # Defining the bandwidth.        
     if (is.null(bandwidth)) { 
         neighbors <- as.integer(neighbors)
-        if (neighbors==0L) { 
+        if (neighbors == 0L) { 
             bandwidth <- 0 
         } else if (neighbors < 0L) { 
             stop("'neighbors' must be a non-negative integer") 
         } else { 
             # Figuring out the bandwidth for KDE, as the median of distances to the n-th neighbour.
-            distances <- findKNN(pre, k=neighbors, get.index=FALSE, num.threads=num.threads)$distance
-            bandwidth <- median(distances[,ncol(distances)])
+            distances <- findDistance(pre, k=neighbors, num.threads=num.threads)
+            bandwidth <- median(distances)
         }
     } else {
         bandwidth <- as.double(bandwidth)
     }
 
-    if (bandwidth <= 0) {
+    if (is.na(bandwidth) || bandwidth <= 0) {
         warning("setting a non-positive bandwidth to a small offset")
         bandwidth <- 1e-8 
     }

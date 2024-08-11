@@ -32,7 +32,7 @@ test_that("medIntensities works as expected", {
 
         all.int <- c(all.values1[,u], all.values2[,u])
         for (r in seq_along(ref.groups)) { 
-            cur.group <- ref.groups[[r]]
+            cur.group <- union(r, ref.groups[[r]]) # adding back self.
             by.sample <- split(cur.group, sample.ids[cur.group])
 
             for (s in names(by.sample)) { 

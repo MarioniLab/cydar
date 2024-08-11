@@ -99,8 +99,9 @@ countCells <- function(prepared, tol=0.5, num.threads=1, BPPARAM=SerialParam(), 
         subset=chosen,
         get.distance=FALSE)$index
 
+    # Adding self back into its list, sorting to reduce cache misses.
     for (i in seq_along(ci)) {
-        ci[[i]] <- c(i, ci[[i]]) # adding the self back into its own list.
+        ci[[i]] <- sort(c(chosen[i], ci[[i]]))
     }
 
     # Filtering out low-abundance hyperspheres to avoid creating large matrices.
@@ -114,9 +115,7 @@ countCells <- function(prepared, tol=0.5, num.threads=1, BPPARAM=SerialParam(), 
     out.counts <- count_cells(ci, sample.id, nsamples)
     out.counts <- t(out.counts)
 
-    # Computing the median intensities (transposing for column-major acesss,
-    # sorting the indices to reduce cache misses).
-    ci <- lapply(ci, sort)
+    # Computing the median intensities (transposing for column-major access).
     sample.weights <- 1/tabulate(prepared$sample.id, nbins=nsamples)
 
     med.used <- weighted_median_int(t(prepared$used), ci, sample.id, sample.weights)

@@ -9,11 +9,8 @@ test_that("neighborDistances works correctly", {
     colnames(coords) <- paste0("X", seq_len(nmarkers))
     suppressWarnings(cd <- prepareCellData(list(A=coords)))
 
-    ci <- BiocNeighbors::bndata(cd$precomputed)
-    preorder <- BiocNeighbors::bnorder(cd$precomputed)
-
     # Computing reference distances.
-    refdist <- as.matrix(dist(t(ci)))
+    refdist <- as.matrix(dist(t(cd$used)))
     nn <- 50L
     refbands <- apply(refdist, 1, function(x) { sort(x)[2:(nn+1)] })
     dimnames(refbands) <- NULL
@@ -28,6 +25,6 @@ test_that("neighborDistances works correctly", {
     # Increasing the downsampling.
     ds <- 10
     stuff3 <- neighborDistances(cd, downsample=ds, neighbors=nn)
-    chosen <- preorder %% ds == 1L
+    chosen <- seq_len(nrow(stuff2)) %% ds == 1L
     expect_equal(stuff2[chosen,,drop=FALSE], stuff3)
 })

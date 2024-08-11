@@ -43,8 +43,7 @@ test_that("CyData cell information getters work as expected", {
     out2 <- countCells(cd2) 
 
     int2 <- cellIntensities(out2)
-    o <- BiocNeighbors::bnorder(cd2$precomputed)
-    ref <- t(rbind(all.values1, all.values2))[,o]
+    ref <- t(rbind(all.values1, all.values2))
     expect_identical(int2, ref[chosen,])
 
     unused <- setdiff(rownames(ref), chosen)
@@ -55,9 +54,8 @@ test_that("CyData cell information getters work as expected", {
     info <- cellInformation(cn)
     expect_identical(nrow(info), ncol(out))
 
-    o <- BiocNeighbors::bnorder(cd$precomputed)
-    expect_identical(info$sample, rep(1:2, c(ncells1, ncells2))[o])
-    expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2))[o])
+    expect_identical(info$sample, rep(1:2, c(ncells1, ncells2)))
+    expect_identical(info$row, c(seq_len(ncells1), seq_len(ncells2)))
 
     # Testing getCenterCell().
     centers <- getCenterCell(cn)
@@ -73,5 +71,5 @@ test_that("CyData column methods trigger warnings", {
     expect_identical(assay(out), assay(cn)[,1:2])
 
     blah <- cn
-    expect_error(blah[,2] <- blah[,1], "column replacement is not supported")
+    expect_warning(expect_error(blah[,2] <- blah[,1], "column replacement is not supported"), "not independent")
 })

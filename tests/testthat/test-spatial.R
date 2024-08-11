@@ -68,7 +68,7 @@ test_that("spatialFDR repsonds to other inputs", {
     expect_equal(spatialFDR(cn, pval), spatialFDR(intensities(cn), pval))
 
     # Handles empty inputs.
-    expect_error(spatialFDR(coords[0,], pval[0]), "'k' must be positive")
+    expect_warning(spatialFDR(coords[0,], pval[0]), "non-positive")
     expect_identical(spatialFDR(coords[0,], pval[0], bandwidth=1), numeric(0))
     
     # Handles mismatch.

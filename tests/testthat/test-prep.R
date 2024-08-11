@@ -17,16 +17,11 @@ test_that("prepareCellData works as expected", {
     # Checking that the cells are correctly ordered.
     sid <- rep(1:2, c(ncells1, ncells2))
     cid <- c(seq_len(ncells1), seq_len(ncells2))
-    pre <- out$precomputed
-    reorder <- BiocNeighbors::bnorder(pre)
-    expect_identical(sid[reorder], out$sample.id)
-    expect_identical(cid[reorder], unname(out$cell.id))
+    expect_identical(sid, out$sample.id)
+    expect_identical(cid, unname(out$cell.id))
 
     # Checking that the intensities are correctly reordered.
-    current <- paste0(out$sample.id, ".", out$cell.id)
-    original <- paste0(sid, ".", cid)
-    m <- match(original, current)
-    expect_equivalent(rbind(all.values1, all.values2), t(BiocNeighbors::bndata(pre))[m,])
+    expect_equivalent(rbind(all.values1, all.values2), t(out$used))
     expect_identical(dim(out$unused), c(0L, as.integer(ncells1+ncells2)))
 })
 
@@ -46,8 +41,7 @@ test_that("prepareCellData works with subsetted markers", {
     expect_equal(tmp.sub, tmp.ref)
 
     # Ensuring that the unused fields are valid.
-    reorder <- BiocNeighbors::bnorder(out.sub$precomputed)
-    expect_identical(out.sub$unused, t(rbind(all.values1, all.values2)[reorder,-spec,drop=FALSE]))
+    expect_identical(out.sub$unused, t(rbind(all.values1, all.values2)[,-spec,drop=FALSE]))
 
     # Checking that we can subset by name as well.
     spec <- c("X2","X3","X4")
@@ -71,16 +65,15 @@ test_that("prepareCellData behaves with ncdfFlowSet inputs", {
     set.seed(100)
     ref <- prepareCellData(thing)
 
-    expect_identical(ref, out)
+    expect_equal(ref, out)
 
     # Checking that the cells are correctly ordered.
     ncells1 <- nrow(fs[[1]])
     ncells2 <- nrow(fs[[2]])
     sid <- rep(1:2, c(ncells1, ncells2))
     cid <- c(seq_len(ncells1), seq_len(ncells2))
-    reorder <- BiocNeighbors::bnorder(out$precomputed)
-    expect_identical(sid[reorder], out$sample.id)
-    expect_identical(cid[reorder], out$cell.id)
+    expect_identical(sid, out$sample.id)
+    expect_identical(cid, out$cell.id)
 })
 
 set.seed(90002)
