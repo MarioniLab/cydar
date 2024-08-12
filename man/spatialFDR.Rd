@@ -7,7 +7,7 @@ Computed adjusted p-values for all hyperspheres, using a density-weighted versio
 }
 
 \usage{
-spatialFDR(x, pvalues, neighbors=50, bandwidth=NULL)
+spatialFDR(x, pvalues, neighbors=50, bandwidth=NULL, num.threads=1)
 }
 
 \arguments{
@@ -17,6 +17,7 @@ Alternatively, a CyData object containing median intensities for groups of cells
 \item{pvalues}{A numeric vector of p-values for each hypersphere.}
 \item{neighbors}{An integer scalar specifying the number of neighbors with which to compute the bandwidth.}
 \item{bandwidth}{A numeric scalar specifying the bandwidth for density estimation.}
+\item{num.threads}{Integer scalar specifying the number of threads to use.}
 }
 
 \details{

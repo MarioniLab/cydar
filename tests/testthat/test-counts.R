@@ -146,7 +146,7 @@ test_that("countCells handles parallelization", {
     cn.p <- countCells(cd, filter=0L, downsample=1L, tol=tol, BPPARAM=MulticoreParam(2))
     expect_equal(cn, cn.p)
 
-    cn.p <- countCells(cd, filter=0L, downsample=1L, tol=tol, BPPARAM=SnowParam(3))
+    cn.p <- countCells(cd, filter=0L, downsample=1L, tol=tol, num.threads=3)
     expect_equal(cn, cn.p)
 })
 

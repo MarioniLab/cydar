@@ -5,7 +5,7 @@
 \description{Tests whether each hypersphere is not redundant to (i.e., lies more than a threshold distance away from) another hypersphere with a lower p-value.}
 
 \usage{
-findFirstSphere(x, pvalues, threshold=1, block=NULL)
+findFirstSphere(x, pvalues, threshold=1, block=NULL, num.threads=1)
 }
 
 \arguments{
@@ -15,6 +15,7 @@ Alternatively, a CyData object containing median intensities for groups of cells
 \item{pvalues}{A numeric vector of p-values, one for each row (i.e., hypersphere) of \code{x}.}
 \item{threshold}{A numeric scalar specifying the maximum distance between the locations of two redundant hyperspheres.}
 \item{block}{A factor specifying which hyperspheres belong to which block, where non-redundant hyperspheres are identified within each block.}
+\item{num.threads}{Integer scalar specifying the number of threads to use.}
 }
 
 \details{

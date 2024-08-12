@@ -2,8 +2,7 @@
 #' 
 #' Expands the hypersphere radius to account for intensity shifting between non-barcoded samples.
 #' 
-#' @param prepared A \linkS4class{List} object containing a \linkS4class{BiocNeighborIndex} object,
-#' typically produced by \code{\link{prepareCellData}}.
+#' @param prepared A \linkS4class{List} object produced by \code{\link{prepareCellData}}.
 #' @param design A numeric matrix specifying the experimental design.
 #' @param tol A numeric scalar proportional to the hypersphere radius, see \code{\link{countCells}}.
 #' 

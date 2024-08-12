@@ -7,8 +7,7 @@
 expandRadius(prepared, design = NULL, tol = 0.5)
 }
 \arguments{
-\item{prepared}{A \linkS4class{List} object containing a \linkS4class{BiocNeighborIndex} object,
-typically produced by \code{\link{prepareCellData}}.}
+\item{prepared}{A \linkS4class{List} object produced by \code{\link{prepareCellData}}.}
 
 \item{design}{A numeric matrix specifying the experimental design.}
 

@@ -13,14 +13,15 @@ neighborDistances(
 )
 }
 \arguments{
-\item{prepared}{A \linkS4class{List} object containing a \linkS4class{BiocNeighborIndex} object,
-typically produced by \code{\link{prepareCellData}}.}
+\item{prepared}{A \linkS4class{List} object produced by \code{\link{prepareCellData}}.}
 
 \item{neighbors}{An integer scalar specifying the number of neighbours.}
 
 \item{downsample}{An integer scalar specifying the frequency with which cells are examined.}
 
 \item{as.tol}{A logical scalar specifying if the distances should be reported as tolerance values.}
+
+\item{num.threads}{Integer scalar specifying the number of threads to use.}
 }
 \value{
 A numeric matrix of distances where each row corresponds to an examined cell and each column \code{i} corresponds to the \code{i}th closest neighbor.

@@ -20,7 +20,7 @@ Alternatively, a ncdfFlowSet object containing the same information.}
 A \linkS4class{List} containing precomputed values for use in \code{\link{countCells}}.
 This includes:
 \itemize{
-\item \code{precomputed}, a \linkS4class{BiocNeighborIndex} object containing a pre-built index for the neighbor search.
+\item \code{precomputed}, a prebuilt index for the neighbor search.
 \item \code{sample.id}, an integer vector specifying the sample of origin for each cell in \code{precomputed}.
 \item \code{cell.id}, an integer vector specifying the original index in 
 the corresponding sample of \code{x} for each cell in \code{precomputed}.
@@ -32,7 +32,7 @@ the corresponding sample of \code{x} for each cell in \code{precomputed}.
 Convert single-cell marker intensities from a mass cytometry experiment into a format for efficient counting.
 }
 \details{
-This function constructs a \linkS4class{BiocNeighborIndex} object from the marker intensities of each cell in one or more samples.
+This function constructs a neighbor search index from the marker intensities of each cell in one or more samples.
 The precomputed index is used to speed up downstream nearest-neighbour searching,
 avoiding redundant work from repeated calls to \code{\link{countCells}} (e.g., with different values of \code{tol}).
 

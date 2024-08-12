@@ -1,6 +1,7 @@
 #' @export
 #' @importFrom stats median mad
 #' @importFrom flowCore rectangleGate
+#' @importFrom Biobase exprs
 outlierGate <- function(x, name, nmads=3, type=c("both", "upper", "lower")) 
 # Constructs a gate to remove outliers in 1 dimension, 
 # based on intensities that are more than 'nmads' from the median. 

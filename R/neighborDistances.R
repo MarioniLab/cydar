@@ -2,11 +2,11 @@
 #'
 #' Calculate the distances in high-dimensional space to the neighboring cells.
 #' 
-#' @param prepared A \linkS4class{List} object containing a \linkS4class{BiocNeighborIndex} object,
-#' typically produced by \code{\link{prepareCellData}}.
+#' @param prepared A \linkS4class{List} object produced by \code{\link{prepareCellData}}.
 #' @param neighbors An integer scalar specifying the number of neighbours.
 #' @param downsample An integer scalar specifying the frequency with which cells are examined.
 #' @param as.tol A logical scalar specifying if the distances should be reported as tolerance values.
+#' @param num.threads Integer scalar specifying the number of threads to use.
 #' 
 #' @details
 #' This function examines each cell at the specified downsampling frequency, and computes the Euclidean distances to its nearest neighbors.

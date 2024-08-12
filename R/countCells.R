@@ -8,6 +8,7 @@
 #' is to be performed in \code{\link{findNeighbors}}.
 #' @param downsample An integer scalar specifying the frequency with which cells are sampled to form hyperspheres.
 #' @param filter An integer scalar specifying the minimum count sum required to report a hypersphere.
+#' @param num.threads Integer scalar specifying the number of threads to use.
 #' 
 #' @details
 #' Consider that each cell defines a point in M-dimensional space (where M is the number of markers), based on its marker intensities.
