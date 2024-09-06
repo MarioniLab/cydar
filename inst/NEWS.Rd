@@ -4,7 +4,9 @@
 
 \section{Version 1.30.0}{\itemize{
 \item Updated to use the latest \pkg{BiocNeighbors}, which means that the output of \code{prepareCellData()} is no longer serializable.
-Specifically, the prebuilt NN search index is now an external pointer to a C++-owned data structure.
+This is because the \code{precomputed} index is now an external pointer to a C++-owned data structure, and cannot be moved between sessions.
+(Arguably, it was a mistake to expose these internals in the expected workflow for this package, but that ship has sailed.)
+Hopefully, this should not affect most users as they should be primarily interacting with the \pkg{CyData} object.
 }}
 
 \section{Version 1.12.0}{\itemize{
