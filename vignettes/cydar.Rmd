@@ -167,7 +167,7 @@ See the `expandRadius` function for more details.
 
 We quantify abundance by assigning cells to hyperspheres in the high-dimensional marker space, and counting the number of cells from each sample in each hypersphere.
 To do this, we first convert the intensity data into a format that is more amenable for counting.
-The `prepareCellData` function works with either a list of matrices or directly with a `ncdfFlowSet` object, and generates a `CyData` object containing the reformatted intensities.
+The `prepareCellData` function works with either a list of matrices or directly with a `ncdfFlowSet` object:
 
 ```{r}
 cd <- prepareCellData(processed.exprs)
